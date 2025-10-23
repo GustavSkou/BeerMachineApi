@@ -32,9 +32,25 @@ namespace BeerMachine
         public int ProducedAmount { get; set; }
         public int DefectiveAmount { get; set; }
 
+        public void UpdateModel(Opc.UaFx.Client.OpcClient session)
+        {
+            BatchId = (float)session.ReadNode(NodeIds.CmdId).Value;
+            Ctrlcmd = (int)session.ReadNode(NodeIds.CntrlCmd).Value;
+            Type = (float)session.ReadNode(NodeIds.CmdType).Value;
+            Speed = (float)session.ReadNode(NodeIds.MachSpeed).Value;
+            Temperature = (float)session.ReadNode(NodeIds.StatusTemp).Value;
+            Vibration = (float)session.ReadNode(NodeIds.StatusMovement).Value;
+            Humidity = (float)session.ReadNode(NodeIds.StatusHumidity).Value;
+            ToProduceAmount = (float)session.ReadNode(NodeIds.CmdAmount).Value;
+            ProducedAmount = (int)session.ReadNode(NodeIds.AdminProcessedCount).Value;
+            DefectiveAmount = (int)session.ReadNode(NodeIds.AdminDefectiveCount).Value;
+        }
+
         public override string ToString()
         {
-            return $"{BatchId}, {Type}, {Speed}, {Ctrlcmd}, {Temperature}, {Vibration}, {Humidity}, {ToProduceAmount}, {ProducedAmount}, {DefectiveAmount}";
+            const int space = -11;
+
+            return $"{"Id",space}{"Type",space}{"Speed",space}{"Ctrlcmd",space}{"Temp",space}{"Vibration",space}{"Humidity",space}{"ToProduce",space}{"Produced",space}{"Defective",space}\n{BatchId,space}{Type,space}{Speed,space}{Ctrlcmd,space}{Temperature,space}{Vibration,space}{Humidity,space}{ToProduceAmount,space}{ProducedAmount,space}{DefectiveAmount,space}";
         }
     }
 

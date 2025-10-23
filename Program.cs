@@ -4,7 +4,9 @@ public class Program
     static void Main(string[] args)
     {
         // Run the BeerMachineHandler on a thread so the process does not block the api
-        Thread thread = new Thread(BeerMachineHandler.Start);
+
+        BeerMachineHandler machineHandler = new();
+        Thread thread = new Thread(machineHandler.Run);
         thread.Start();
 
         // build and run api
