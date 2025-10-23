@@ -1,0 +1,43 @@
+# Ignore build outputs
+bin/
+obj/
+publish/
+
+# Visual Studio / IDE
+.vs/
+.vscode/
+.idea/
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# NuGet
+*.nupkg
+packages/
+.nuget/
+
+# ASP.NET Core
+appsettings.Development.json
+secrets.json
+aspnetcore-https/
+
+# Logs, DB, and other generated files
+*.log
+*.db
+*.sqlite
+*.bak
+
+# Rider / JetBrains
+*.sln.iml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# dev HTTPS certs/keys (do not commit)
+*.pfx
+*.pem
+*.key

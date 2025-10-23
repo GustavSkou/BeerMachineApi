@@ -1,0 +1,6 @@
+@BeerMachineApi_HostAddress = http://localhost:7040
+
+GET {{BeerMachineApi_HostAddress}}/machinestatus/
+Accept: application/json
+
+###
