@@ -1,4 +1,4 @@
-using BeerMachine;
+using BeerMachineApi;
 public class Program
 {
     static void Main(string[] args)
@@ -17,6 +17,8 @@ public class Program
         builder.Services.AddControllers();
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddOpenApi();
+
+        builder.Services.AddSingleton(machineHandler);
 
         var app = builder.Build();
 

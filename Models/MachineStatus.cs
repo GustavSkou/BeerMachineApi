@@ -1,4 +1,4 @@
-namespace BeerMachine
+namespace BeerMachineApi.Models
 {
     public class MachineStatusModel
     {
@@ -14,6 +14,7 @@ namespace BeerMachine
             ToProduceAmount = 0;
             ProducedAmount = 0;
             DefectiveAmount = 0;
+            StopReason = 0;
         }
 
         private static MachineStatusModel _instance = new MachineStatusModel();
@@ -32,6 +33,8 @@ namespace BeerMachine
         public int ProducedAmount { get; set; }
         public int DefectiveAmount { get; set; }
 
+        public int StopReason { get; set; }
+
         public void UpdateModel(Opc.UaFx.Client.OpcClient session)
         {
             BatchId = (float)session.ReadNode(NodeIds.CmdId).Value;
@@ -44,6 +47,7 @@ namespace BeerMachine
             ToProduceAmount = (float)session.ReadNode(NodeIds.CmdAmount).Value;
             ProducedAmount = (int)session.ReadNode(NodeIds.AdminProcessedCount).Value;
             DefectiveAmount = (int)session.ReadNode(NodeIds.AdminDefectiveCount).Value;
+            StopReason = (int)session.ReadNode(NodeIds.AdminStopReason).Value;
         }
 
         public override string ToString()

@@ -1,9 +1,11 @@
 using Opc.UaFx;
 using Opc.UaFx.Client;
 
-namespace BeerMachine
+using BeerMachineApi.Models;
+
+namespace BeerMachineApi
 {
-    public class BeerMachineHandler
+    public class BeerMachineHandler : IMachineService
     {
         private OpcClient? _opcSession;
 
@@ -18,9 +20,9 @@ namespace BeerMachine
                 ResetMachine();
 
                 int batchId = 1;
-                BeerType beerType = BeerType.AlcoholFree;
-                int amount = 200;
-                int machineSpeed = 150;
+                BeerType beerType = BeerType.Ale;
+                int amount = 10000;
+                int machineSpeed = 100;
                 WriteBatchToServer(new Batch(batchId, beerType, amount, machineSpeed));
 
                 while (true)
@@ -29,12 +31,20 @@ namespace BeerMachine
 
                     Console.Clear();
                     Console.WriteLine(MachineStatusModel.Instance.ToString());
+
+                    if (MachineStatusModel.Instance.StopReason == 11)
+                        break;
                     //Thread.Sleep(500);
                 }
             }
         }
 
-        public void WriteBatchToServer(Batch batch)
+        public void ExecuteCommand()
+        {
+
+        }
+
+        private void WriteBatchToServer(Batch batch)
         {
             // Values are up casted to insure that the types algin with the expected data types
 
@@ -51,7 +61,7 @@ namespace BeerMachine
             _opcSession.WriteNodes(commands);
         }
 
-        public void ResetMachine()
+        private void ResetMachine()
         {
             OpcWriteNode[] commands = {
                 new(NodeIds.CntrlCmd, 1),
@@ -61,11 +71,11 @@ namespace BeerMachine
             Thread.Sleep(1000);
         }
 
-        public void ConnectToServer()
+        private void ConnectToServer()
         {
             _opcSession.Connect();
         }
-        public void DisconnectFromServer()
+        private void DisconnectFromServer()
         {
             _opcSession.Disconnect();
             _opcSession.Dispose(); //Clean up in case it wasn't automatically handled

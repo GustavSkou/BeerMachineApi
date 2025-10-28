@@ -1,4 +1,4 @@
-namespace BeerMachine
+namespace BeerMachineApi.Models
 {
     public class Batch
     {
