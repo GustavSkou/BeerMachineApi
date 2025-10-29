@@ -3,7 +3,7 @@ using BeerMachineApi.Models;
 namespace BeerMachineApi.Controllers;
 
 [ApiController]
-[Route("beerMachine")] // expose /machinestatus
+[Route("machine")] // expose /machine
 public class MachineController : ControllerBase
 {
 
@@ -16,7 +16,7 @@ public class MachineController : ControllerBase
         _machineHandler = machineHandler;
     }
 
-    [HttpGet("status")]
+    [HttpGet("status")] // /machine/status
     public IEnumerable<object> Get()
     {
         return [
@@ -27,18 +27,17 @@ public class MachineController : ControllerBase
     [HttpPost("command")]
     public IActionResult PostCommand([FromBody] Command command)
     {
-        //
         if (command.Type == null || command.Type == string.Empty)
             return BadRequest("invalid command");
 
-        //try
-        //{
-        _machineHandler.ExecuteCommand(command);
-        return Ok();
-        /*}
+        try
+        {
+            _machineHandler.ExecuteCommand(command);
+            return Ok();
+        }
         catch (Exception ex)
         {
             return StatusCode(500);
-        }*/
+        }
     }
 }

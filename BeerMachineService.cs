@@ -37,27 +37,11 @@ namespace BeerMachineApi
                 Thread.Sleep(500);
                 ResetMachine();
 
-
-
-                /*int batchId = 1;
-                BeerType beerType = BeerType.Ale;
-                int amount = 100;
-                int machineSpeed = 100;
-                WriteBatchToServer(new Batch(batchId, beerType, amount, machineSpeed));
-                StartBatch();*/
-
                 while (true)
                 {
                     _statusModel.UpdateModel(_opcSession);
                     Console.Clear();
                     Console.WriteLine(_statusModel.ToString());
-                    /*if (_statusModel.ProducedAmount == amount)
-                    {
-                        StopMachine();
-                        ResetMachine();
-                        WriteBatchToServer(new Batch(2, beerType, amount, machineSpeed));
-                        StartBatch();
-                    }*/
                 }
             }
         }
@@ -69,13 +53,13 @@ namespace BeerMachineApi
 
         public void ExecuteCommand(Command command)
         {
-            switch (command.Type)
+            switch (command.Type.ToLower())
             {
                 case "batch":
-                    float id = (float)command.Parameters["id"];
-                    float type = (float)command.Parameters["type"];
-                    float amount = (float)command.Parameters["amount"];
-                    float speed = (float)command.Parameters["speed"];
+                    float id = command.Parameters["id"];
+                    float type = command.Parameters["type"];
+                    float amount = command.Parameters["amount"];
+                    float speed = command.Parameters["speed"];
                     WriteBatchToServer(new Batch(id, (BeerType)type, amount, speed));
                     break;
 
@@ -89,6 +73,14 @@ namespace BeerMachineApi
 
                 case "stop":
                     StopMachine();
+                    break;
+
+                case "connect":
+                    ConnectToServer();
+                    break;
+
+                case "disconnect":
+                    DisconnectFromServer();
                     break;
             }
         }
