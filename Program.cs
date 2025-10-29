@@ -1,12 +1,12 @@
-using BeerMachine;
+using BeerMachineApi;
 public class Program
 {
     static void Main(string[] args)
     {
         // Run the BeerMachineHandler on a thread so the process does not block the api
 
-        BeerMachineHandler machineHandler = new();
-        Thread thread = new Thread(machineHandler.Run);
+        BeerMachineApi.Models.IMachineService machineService = new BeerMachineService(new BeerMachineApi.Models.BeerMachineStatusModel());
+        Thread thread = new Thread(machineService.Start);
         thread.Start();
 
         // build and run api
@@ -17,6 +17,8 @@ public class Program
         builder.Services.AddControllers();
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddOpenApi();
+
+        builder.Services.AddSingleton(machineService);
 
         var app = builder.Build();
 

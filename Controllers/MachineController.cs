@@ -1,24 +1,44 @@
 using Microsoft.AspNetCore.Mvc;
-using BeerMachine;
+using BeerMachineApi.Models;
 namespace BeerMachineApi.Controllers;
 
 [ApiController]
-[Route("machinestatus")] // expose /machinestatus
+[Route("beerMachine")] // expose /machinestatus
 public class MachineController : ControllerBase
 {
 
     private readonly ILogger<MachineController> _logger;
+    private IMachineService _machineHandler;
 
-    public MachineController(ILogger<MachineController> logger)
+    public MachineController(IMachineService machineHandler, ILogger<MachineController> logger)
     {
         _logger = logger;
+        _machineHandler = machineHandler;
     }
 
-    [HttpGet(Name = null)]
-    public IEnumerable<MachineStatusModel> Get()
+    [HttpGet("status")]
+    public IEnumerable<object> Get()
     {
-        return new[] {
-            MachineStatusModel.Instance
-        };
+        return [
+            _machineHandler.GetStatus()
+        ];
+    }
+
+    [HttpPost("command")]
+    public IActionResult PostCommand([FromBody] Command command)
+    {
+        //
+        if (command.Type == null || command.Type == string.Empty)
+            return BadRequest("invalid command");
+
+        //try
+        //{
+        _machineHandler.ExecuteCommand(command);
+        return Ok();
+        /*}
+        catch (Exception ex)
+        {
+            return StatusCode(500);
+        }*/
     }
 }

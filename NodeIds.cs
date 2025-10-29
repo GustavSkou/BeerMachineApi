@@ -1,4 +1,4 @@
-namespace BeerMachine
+namespace BeerMachineApi
 {
     public static class NodeIds
     {
