@@ -2,5 +2,9 @@ namespace BeerMachineApi.Models;
 
 public interface IMachineService
 {
-    public void ExecuteCommand();
+    public void Start();
+
+    // return an object which properties represent the status of the machine
+    public object GetStatus();
+    public void ExecuteCommand(Command command);
 }

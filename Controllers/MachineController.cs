@@ -17,11 +17,11 @@ public class MachineController : ControllerBase
     }
 
     [HttpGet("status")]
-    public IEnumerable<MachineStatusModel> Get()
+    public IEnumerable<object> Get()
     {
-        return new[] {
-            MachineStatusModel.Instance
-        };
+        return [
+            _machineHandler.GetStatus()
+        ];
     }
 
     [HttpPost("command")]
@@ -31,14 +31,14 @@ public class MachineController : ControllerBase
         if (command.Type == null || command.Type == string.Empty)
             return BadRequest("invalid command");
 
-        try
-        {
-            _machineHandler.ExecuteCommand();
-            return Ok();
-        }
+        //try
+        //{
+        _machineHandler.ExecuteCommand(command);
+        return Ok();
+        /*}
         catch (Exception ex)
         {
             return StatusCode(500);
-        }
+        }*/
     }
 }
