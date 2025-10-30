@@ -2,6 +2,7 @@ using Opc.UaFx;
 using Opc.UaFx.Client;
 
 using BeerMachineApi.Models;
+using Org.BouncyCastle.Crypto.Engines;
 
 namespace BeerMachineApi.Services
 {
@@ -55,6 +56,8 @@ namespace BeerMachineApi.Services
             switch (command.Type.ToLower())
             {
                 case "batch":
+                    if (command.Parameters == null) throw new Exception("batch command parameters cannot be null");
+
                     float id = command.Parameters["id"];
                     float type = command.Parameters["type"];
                     float amount = command.Parameters["amount"];
@@ -81,6 +84,9 @@ namespace BeerMachineApi.Services
                 case "disconnect":
                     DisconnectFromServer();
                     break;
+
+                default:
+                    throw new Exception($"No command matching type {command.Type}");
             }
         }
         //stop->reset->start

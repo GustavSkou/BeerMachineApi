@@ -28,16 +28,20 @@ public class MachineController : ControllerBase
     public IActionResult PostCommand([FromBody] Command command)
     {
         if (command.Type == null || command.Type == string.Empty)
-            return BadRequest("invalid command");
+        {
+            _logger.LogError("Post request with no Type");
+            return BadRequest("Command type cannot be null or empty");
+        }
 
         try
         {
             _machineHandler.ExecuteCommand(command);
-            return Ok();
+            return Ok($"Ran {command.Type}");
         }
         catch (Exception ex)
         {
-            return StatusCode(500);
+            _logger.LogError(ex, "Error executing command");
+            return StatusCode(500, ex.Message);
         }
     }
 }
