@@ -41,3 +41,5 @@ Thumbs.db
 *.pfx
 *.pem
 *.key
+
+appsettings.json
