@@ -1,4 +1,7 @@
 using BeerMachineApi.Services;
+using BeerMachineApi.Repository;
+using Microsoft.EntityFrameworkCore;
+
 public class Program
 {
     static void Main(string[] args)
@@ -10,6 +13,9 @@ public class Program
         thread.Start();
 
         var builder = WebApplication.CreateBuilder(args); // build and run api
+        //builder.Services.AddDbContext<MachineDbContext>(options =>
+        //    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
         builder.Services.AddControllers(); // Add services to the container.
         builder.Services.AddOpenApi(); // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddSingleton(machineService);

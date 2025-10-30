@@ -1,4 +1,4 @@
-namespace BeerMachineApi.Models
+namespace BeerMachineApi.Repository
 {
     public enum BeerType
     {

@@ -1,8 +1,7 @@
 using Opc.UaFx;
 using Opc.UaFx.Client;
 
-using BeerMachineApi.Models;
-using Org.BouncyCastle.Crypto.Engines;
+using BeerMachineApi.Repository;
 
 namespace BeerMachineApi.Services
 {
@@ -62,7 +61,7 @@ namespace BeerMachineApi.Services
                     float type = command.Parameters["type"];
                     float amount = command.Parameters["amount"];
                     float speed = command.Parameters["speed"];
-                    WriteBatchToServer(new Batch(id, (BeerType)type, amount, speed));
+                    WriteBatchToServer(id, type, amount, speed);
                     break;
 
                 case "start":
@@ -90,15 +89,15 @@ namespace BeerMachineApi.Services
             }
         }
         //stop->reset->start
-        private void WriteBatchToServer(Batch batch)
+        private void WriteBatchToServer(float id, float type, float amount, float speed)
         {
             // Values are up casted to insure that the types algin with the expected data types
 
             OpcWriteNode[] commands = {
-            new OpcWriteNode(NodeIds.CmdId, batch.Id),
-            new OpcWriteNode(NodeIds.CmdType, (float) batch.Type),
-            new OpcWriteNode(NodeIds.CmdAmount, batch.Amount),
-            new OpcWriteNode(NodeIds.MachSpeed, batch.Speed)
+            new OpcWriteNode(NodeIds.CmdId, id),
+            new OpcWriteNode(NodeIds.CmdType, type),
+            new OpcWriteNode(NodeIds.CmdAmount, amount),
+            new OpcWriteNode(NodeIds.MachSpeed, speed)
         };
             if (_opcSession == null) throw new Exception();
 
