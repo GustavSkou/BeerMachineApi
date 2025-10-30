@@ -1,7 +1,4 @@
-using System.Reflection;
-using System.Text;
-
-namespace BeerMachineApi.Models
+namespace BeerMachineApi.Services
 {
     public class BeerMachineStatusModel
     {

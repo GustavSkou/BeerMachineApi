@@ -1,4 +1,4 @@
-namespace BeerMachineApi.Models;
+namespace BeerMachineApi.Services;
 
 public class Command
 {

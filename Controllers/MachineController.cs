@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using BeerMachineApi.Models;
+using BeerMachineApi.Services;
 namespace BeerMachineApi.Controllers;
 
 [ApiController]

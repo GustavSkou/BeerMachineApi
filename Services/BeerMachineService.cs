@@ -2,9 +2,8 @@ using Opc.UaFx;
 using Opc.UaFx.Client;
 
 using BeerMachineApi.Models;
-using System.Xml;
 
-namespace BeerMachineApi
+namespace BeerMachineApi.Services
 {
     public class BeerMachineService : IMachineService
     {
