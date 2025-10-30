@@ -1,23 +1,23 @@
 @BeerMachineApi_HostAddress = http://localhost:5107
 @noRejectUnauthorized = true
 
-GET {{BeerMachineApi_HostAddress}}/beerMachine/status
+GET {{BeerMachineApi_HostAddress}}/machine/status
 Accept: application/json
 
 ###
 
-POST {{BeerMachineApi_HostAddress}}/beerMachine/command HTTP/1.1
+POST {{BeerMachineApi_HostAddress}}/machine/command HTTP/1.1
 Content-Type: application/json
 {
     "Type": "stop"
 }
-POST {{BeerMachineApi_HostAddress}}/beerMachine/command HTTP/1.1
+POST {{BeerMachineApi_HostAddress}}/machine/command HTTP/1.1
 Content-Type: application/json
 {
     "Type": "reset"
 }
 
-POST {{BeerMachineApi_HostAddress}}/beerMachine/command HTTP/1.1
+POST {{BeerMachineApi_HostAddress}}/machine/command HTTP/1.1
 Content-Type: application/json
 {
     "Type": "batch",
@@ -29,7 +29,7 @@ Content-Type: application/json
     }
 }
 
-POST {{BeerMachineApi_HostAddress}}/beerMachine/command HTTP/1.1
+POST {{BeerMachineApi_HostAddress}}/machine/command HTTP/1.1
 Content-Type: application/json
 {
     "Type": "start"
