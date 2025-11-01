@@ -1,13 +1,18 @@
-generate certificates
-dotnet dev-certs https --trust
-
-easier to test
-dotnet run --launch-profile http                <- run program with launch profile http, which exposes the http endpoint
-https://localhost:5107/beerMachine/status       <- status endpoint
-                                                
-
-dotnet run --launch-profile https               <- for the https
-https://localhost:7040/beerMachine/status
+- Run the project and expose the http endpoint
+    https://localhost:5107/machine<br>
+    this is will usually be easier to test
+    ```
+    dotnet run --launch-profile http
+    ```
+    
 
 
-for testing post use /BeerMachineApi.http and launch http profile
+
+
+- Run the project and expose https
+    https://localhost:7040/machine
+    ```
+    dotnet run --launch-profile https
+    ```
+
+for testing use /BeerMachineApi.http and launch http profile
