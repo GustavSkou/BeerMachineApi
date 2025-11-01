@@ -46,15 +46,14 @@ namespace BeerMachineApi.Services
             }
         }
 
-        private static void HandleDataChanged(object sender, OpcDataChangeReceivedEventArgs e)
+        private void HandleDataChanged(object sender, OpcDataChangeReceivedEventArgs e)
         {
-            // Your code to execute on each data change.
             // The 'sender' variable contains the OpcMonitoredItem with the NodeId.
             OpcMonitoredItem item = (OpcMonitoredItem)sender;
 
-            //_statusModel.UpdateModel(_opcSession);
+            _statusModel.UpdateModel(_opcSession);
             Console.Clear();
-            Console.WriteLine($"Data Change {item.NodeId}: {e.Item.Value}");
+            Console.WriteLine($"Data Change {item.NodeId}: {e.Item.Value}\n{_statusModel}");
         }
 
         public object GetStatus()
