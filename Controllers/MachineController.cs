@@ -36,7 +36,7 @@ public class MachineController : ControllerBase
         try
         {
             _machineHandler.ExecuteCommand(command);
-            return Ok($"Ran {command.Type}");
+            return Ok($"Executed: {command.Type}");
         }
         catch (Exception ex)
         {

@@ -36,13 +36,25 @@ namespace BeerMachineApi.Services
                 Thread.Sleep(500);
                 ResetMachine();
 
+                // when there is a change to the amount of processed beers the method HandleDataChanged is called
+                OpcSubscription subscription = _opcSession.SubscribeDataChange(NodeIds.AdminProcessedCount, HandleDataChanged);
+
                 while (true)
                 {
-                    _statusModel.UpdateModel(_opcSession);
-                    Console.Clear();
-                    Console.WriteLine(_statusModel.ToString());
+
                 }
             }
+        }
+
+        private static void HandleDataChanged(object sender, OpcDataChangeReceivedEventArgs e)
+        {
+            // Your code to execute on each data change.
+            // The 'sender' variable contains the OpcMonitoredItem with the NodeId.
+            OpcMonitoredItem item = (OpcMonitoredItem)sender;
+
+            //_statusModel.UpdateModel(_opcSession);
+            Console.Clear();
+            Console.WriteLine($"Data Change {item.NodeId}: {e.Item.Value}");
         }
 
         public object GetStatus()
@@ -88,7 +100,7 @@ namespace BeerMachineApi.Services
                     throw new Exception($"No command matching type {command.Type}");
             }
         }
-        //stop->reset->start
+
         private void WriteBatchToServer(float id, float type, float amount, float speed)
         {
             // Values are up casted to insure that the types algin with the expected data types
