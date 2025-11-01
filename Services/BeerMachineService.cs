@@ -37,16 +37,19 @@ namespace BeerMachineApi.Services
                 ResetMachine();
 
                 // when there is a change to the amount of processed beers the method HandleDataChanged is called
-                OpcSubscription subscription = _opcSession.SubscribeDataChange(NodeIds.AdminProcessedCount, HandleDataChanged);
+                //OpcSubscription subscription = _opcSession.SubscribeDataChange(NodeIds.AdminProcessedCount, HandleDataChange);
 
-                while (true)
-                {
+                OpcSubscribeDataChange[] subscriptions = {
+                    new OpcSubscribeDataChange(NodeIds.AdminProcessedCount, HandleDataChange)
+                };
 
-                }
+                OpcSubscription subscription = _opcSession.SubscribeNodes(subscriptions);
+
+                while (true) { }
             }
         }
 
-        private void HandleDataChanged(object sender, OpcDataChangeReceivedEventArgs e)
+        private void HandleDataChange(object sender, OpcDataChangeReceivedEventArgs e)
         {
             // The 'sender' variable contains the OpcMonitoredItem with the NodeId.
             OpcMonitoredItem item = (OpcMonitoredItem)sender;
