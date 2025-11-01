@@ -5,7 +5,7 @@ using BeerMachineApi.Repository;
 
 namespace BeerMachineApi.Services
 {
-    public class BeerMachineService : IMachineService
+    public class BeerMachineService : MachineCommands, IMachineService
     {
         private BeerMachineStatusModel _statusModel;
         private OpcClient? _opcSession;
@@ -30,11 +30,7 @@ namespace BeerMachineApi.Services
         {
             using (_opcSession = new OpcClient(_serverURL))
             {
-                ConnectToServer();
-                Thread.Sleep(500);
-                StopMachine();
-                Thread.Sleep(500);
-                ResetMachine();
+                ConnectToServer(_opcSession);
 
                 // when there is a change to the amount of processed beers the method HandleDataChanged is called
                 //OpcSubscription subscription = _opcSession.SubscribeDataChange(NodeIds.AdminProcessedCount, HandleDataChange);
@@ -75,87 +71,32 @@ namespace BeerMachineApi.Services
                     float type = command.Parameters["type"];
                     float amount = command.Parameters["amount"];
                     float speed = command.Parameters["speed"];
-                    WriteBatchToServer(id, type, amount, speed);
+                    WriteBatchToServer(_opcSession, id, type, amount, speed);
                     break;
 
                 case "start":
-                    StartBatch();
+                    StartBatch(_opcSession);
                     break;
 
                 case "reset":
-                    ResetMachine();
+                    ResetMachine(_opcSession);
                     break;
 
                 case "stop":
-                    StopMachine();
+                    StopMachine(_opcSession);
                     break;
 
                 case "connect":
-                    ConnectToServer();
+                    ConnectToServer(_opcSession);
                     break;
 
                 case "disconnect":
-                    DisconnectFromServer();
+                    DisconnectFromServer(_opcSession);
                     break;
 
                 default:
                     throw new Exception($"No command matching type {command.Type}");
             }
-        }
-
-        private void WriteBatchToServer(float id, float type, float amount, float speed)
-        {
-            // Values are up casted to insure that the types algin with the expected data types
-
-            OpcWriteNode[] commands = {
-            new OpcWriteNode(NodeIds.CmdId, id),
-            new OpcWriteNode(NodeIds.CmdType, type),
-            new OpcWriteNode(NodeIds.CmdAmount, amount),
-            new OpcWriteNode(NodeIds.MachSpeed, speed)
-        };
-            if (_opcSession == null) throw new Exception();
-
-            _opcSession.WriteNodes(commands);
-        }
-
-        private void StartBatch()
-        {
-            OpcWriteNode[] commands = {
-                new(NodeIds.CntrlCmd, 2),
-                new(NodeIds.CmdChangeRequest, true)
-            };
-            _opcSession.WriteNodes(commands);
-            Thread.Sleep(1000);
-        }
-
-        private void ResetMachine()
-        {
-            OpcWriteNode[] commands = {
-                new(NodeIds.CntrlCmd, 1),
-                new(NodeIds.CmdChangeRequest, true)
-            };
-            _opcSession.WriteNodes(commands);
-            Thread.Sleep(1000);
-        }
-
-        private void StopMachine()
-        {
-            OpcWriteNode[] commands = {
-                new(NodeIds.CntrlCmd, 3),
-                new(NodeIds.CmdChangeRequest, true)
-            };
-            _opcSession.WriteNodes(commands);
-            Thread.Sleep(1000);
-        }
-
-        private void ConnectToServer()
-        {
-            _opcSession.Connect();
-        }
-        private void DisconnectFromServer()
-        {
-            _opcSession.Disconnect();
-            _opcSession.Dispose(); //Clean up in case it wasn't automatically handled
         }
     }
 }
