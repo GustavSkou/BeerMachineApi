@@ -1,7 +1,12 @@
 @BeerMachineApi_HostAddress = http://localhost:5107
 @noRejectUnauthorized = true
 
-GET {{BeerMachineApi_HostAddress}}/machine/status
+GET {{BeerMachineApi_HostAddress}}/status/machine
+Accept: application/json
+
+###
+
+GET {{BeerMachineApi_HostAddress}}/status/batch
 Accept: application/json
 
 ###
@@ -22,8 +27,8 @@ Content-Type: application/json
 {
     "Type": "batch",
     "Parameters": {
-        "id": 1,
-        "amount": 20,
+        "id": 3,
+        "amount": 30,
         "speed": 100,
         "type": 1
     }
