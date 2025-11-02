@@ -1,17 +1,21 @@
 namespace BeerMachineApi.Services;
 
+using System.Collections;
 using Opc.UaFx;
 using Opc.UaFx.Client;
 
 public class MachineCommands
 {
-    protected void StartBatch(OpcClient opcSession)
+    protected void StartBatch(OpcClient opcClient, BatchQueue batchQueue)
     {
+        WriteBatchToServer(opcClient, batchQueue.Dequeue());
+
         OpcWriteNode[] commands = {
                 new(NodeIds.CntrlCmd, 2),
                 new(NodeIds.CmdChangeRequest, true)
             };
-        opcSession.WriteNodes(commands);
+
+        opcClient.WriteNodes(commands);
     }
 
     protected void ResetMachine(OpcClient opcSession)
@@ -43,13 +47,13 @@ public class MachineCommands
         opcSession.Dispose(); //Clean up in case it wasn't automatically handled
     }
 
-    protected void WriteBatchToServer(OpcClient opcSession, float id, float type, float amount, float speed)
+    protected void WriteBatchToServer(OpcClient opcSession, BatchDTO batch)
     {
         OpcWriteNode[] commands = {
-            new OpcWriteNode(NodeIds.CmdId, id),
-            new OpcWriteNode(NodeIds.CmdType, type),
-            new OpcWriteNode(NodeIds.CmdAmount, amount),
-            new OpcWriteNode(NodeIds.MachSpeed, speed)
+            new OpcWriteNode(NodeIds.CmdId, batch.Id),
+            new OpcWriteNode(NodeIds.CmdType, batch.Type),
+            new OpcWriteNode(NodeIds.CmdAmount, batch.Amount),
+            new OpcWriteNode(NodeIds.CmdMachSpeed, batch.Speed)
         };
         opcSession.WriteNodes(commands);
     }

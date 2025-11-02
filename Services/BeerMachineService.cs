@@ -1,19 +1,22 @@
 using Opc.UaFx;
 using Opc.UaFx.Client;
 
-using BeerMachineApi.Repository;
-
 namespace BeerMachineApi.Services
 {
     public class BeerMachineService : MachineCommands, IMachineService
     {
-        private BeerMachineStatusModel _statusModel;
-        private OpcClient? _opcSession;
+        private BeerMachineStatusModel _machineStatusModel;
+        private BatchStatusModel _batchStatusModel;
+        private BatchQueue _batchQueue;
+        private OpcClient? _opcClient;
         private readonly string _serverURL;
 
-        public BeerMachineService(BeerMachineStatusModel beerMachineStatusModel, bool simulated = true)
+        public BeerMachineService(BeerMachineStatusModel beerMachineStatusModel, BatchStatusModel batchStatusModel, BatchQueue batchQueue, bool simulated = true)
         {
-            _statusModel = beerMachineStatusModel;
+            _machineStatusModel = beerMachineStatusModel;
+            _batchStatusModel = batchStatusModel;
+            _batchQueue = batchQueue;
+
             switch (simulated)
             {
                 case true:
@@ -28,36 +31,70 @@ namespace BeerMachineApi.Services
 
         public void Start()
         {
-            using (_opcSession = new OpcClient(_serverURL))
+            using (_opcClient = new OpcClient(_serverURL))
             {
-                ConnectToServer(_opcSession);
+                ConnectToServer(_opcClient);
 
                 // when there is a change to the amount of processed beers the method HandleDataChanged is called
-                //OpcSubscription subscription = _opcSession.SubscribeDataChange(NodeIds.AdminProcessedCount, HandleDataChange);
-
                 OpcSubscribeDataChange[] subscriptions = {
-                    new OpcSubscribeDataChange(NodeIds.AdminProcessedCount, HandleDataChange)
+                    new OpcSubscribeDataChange(NodeIds.AdminProcessedCount, HandleProcessedChange)
                 };
 
-                OpcSubscription subscription = _opcSession.SubscribeNodes(subscriptions);
+                OpcSubscription subscription = _opcClient.SubscribeNodes(subscriptions);
 
-                while (true) { }
+                while (true)
+                {
+
+                }
             }
         }
 
-        private void HandleDataChange(object sender, OpcDataChangeReceivedEventArgs e)
+        private void HandleProcessedChange(object sender, OpcDataChangeReceivedEventArgs e)
         {
             // The 'sender' variable contains the OpcMonitoredItem with the NodeId.
             OpcMonitoredItem item = (OpcMonitoredItem)sender;
 
-            _statusModel.UpdateModel(_opcSession);
+            _machineStatusModel.UpdateModel(_opcClient);
+            _batchStatusModel.UpdateModel(_opcClient);
+
             Console.Clear();
-            Console.WriteLine($"Data Change {item.NodeId}: {e.Item.Value}\n{_statusModel}");
+            Console.WriteLine(_batchQueue.Count);
+            if (_batchStatusModel.ProducedAmount == (int)_batchStatusModel.ToProduceAmount)
+            {
+                Thread.Sleep(500);
+                StopMachine(_opcClient);
+                Thread.Sleep(500);
+                ResetMachine(_opcClient);
+
+                if (_batchQueue.Count > 0)
+                {
+                    Thread.Sleep(500);
+                    StartBatch(_opcClient, _batchQueue);
+                }
+                else
+                {
+                    Console.WriteLine("no batches queued");
+                }
+            }
+            Console.WriteLine($"Data Change {item.NodeId}: {e.Item.Value}\n{_machineStatusModel}\n{_batchStatusModel}");
         }
 
-        public object GetStatus()
+        public object GetStatus(string type)
         {
-            return _statusModel;
+            switch (type)
+            {
+                case "machine":
+                    return _machineStatusModel;
+
+                case "batch":
+                    return _batchStatusModel;
+
+                case "queue":
+
+
+                default:
+                    throw new Exception("status time does not exist");
+            }
         }
 
         public void ExecuteCommand(Command command)
@@ -67,31 +104,34 @@ namespace BeerMachineApi.Services
                 case "batch":
                     if (command.Parameters == null) throw new Exception("batch command parameters cannot be null");
 
-                    float id = command.Parameters["id"];
-                    float type = command.Parameters["type"];
-                    float amount = command.Parameters["amount"];
-                    float speed = command.Parameters["speed"];
-                    WriteBatchToServer(_opcSession, id, type, amount, speed);
+                    _batchQueue.Enqueue(new BatchDTO(
+                        command.Parameters["id"],
+                        command.Parameters["amount"],
+                        command.Parameters["speed"],
+                        command.Parameters["type"]
+                    ));
+
+
                     break;
 
                 case "start":
-                    StartBatch(_opcSession);
+                    StartBatch(_opcClient, _batchQueue);
                     break;
 
                 case "reset":
-                    ResetMachine(_opcSession);
+                    ResetMachine(_opcClient);
                     break;
 
                 case "stop":
-                    StopMachine(_opcSession);
+                    StopMachine(_opcClient);
                     break;
 
                 case "connect":
-                    ConnectToServer(_opcSession);
+                    ConnectToServer(_opcClient);
                     break;
 
                 case "disconnect":
-                    DisconnectFromServer(_opcSession);
+                    DisconnectFromServer(_opcClient);
                     break;
 
                 default:
