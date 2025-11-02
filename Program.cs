@@ -8,7 +8,7 @@ public class Program
     {
         // Run the BeerMachineHandler on a thread so the process does not block the api
 
-        IMachineService machineService = new BeerMachineService(new BeerMachineStatusModel());
+        IMachineService machineService = new BeerMachineService(new BeerMachineStatusModel(), new BatchStatusModel(), new BatchQueue());
         Thread thread = new Thread(machineService.Start);
         thread.Start();
 

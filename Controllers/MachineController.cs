@@ -16,11 +16,27 @@ public class MachineController : ControllerBase
         _machineHandler = machineHandler;
     }
 
-    [HttpGet("status")] // /machine/status
-    public IEnumerable<object> Get()
+    [HttpGet("/status/machine")]
+    public IEnumerable<object> GetStatusMachine()
     {
         return [
-            _machineHandler.GetStatus()
+            _machineHandler.GetStatus("machine")
+        ];
+    }
+
+    [HttpGet("/status/batch")]
+    public IEnumerable<object> GetStatusBatch()
+    {
+        return [
+            _machineHandler.GetStatus("batch")
+        ];
+    }
+
+    [HttpGet("/status/queue")]
+    public IEnumerable<object> GetStatusQueue()
+    {
+        return [
+            _machineHandler.GetStatus("queue")
         ];
     }
 
