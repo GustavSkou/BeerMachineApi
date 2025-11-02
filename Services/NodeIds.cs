@@ -6,13 +6,13 @@ namespace BeerMachineApi.Services
         public const string CmdId = "ns=6;s=::Program:Cube.Command.Parameter[0].Value";
         public const string CmdType = "ns=6;s=::Program:Cube.Command.Parameter[1].Value";
         public const string CmdAmount = "ns=6;s=::Program:Cube.Command.Parameter[2].Value";
-        public const string MachSpeed = "ns=6;s=::Program:Cube.Command.MachSpeed";
+        public const string CmdMachSpeed = "ns=6;s=::Program:Cube.Command.MachSpeed";
         public const string CntrlCmd = "ns=6;s=::Program:Cube.Command.CntrlCmd";
         public const string CmdChangeRequest = "ns=6;s=::Program:Cube.Command.CmdChangeRequest";
 
 
-        public const string StatusBatchId = "ns=6;s=::Program:Cube.Status.Parameter[0].Value";
-        public const string StatusCurAmount = "ns=6;s=::Program:Cube.Status.Parameter[1].Value"; //amount to produce
+        public const string StatusBatchId = "ns=6;s=::Program:Cube.Status.Parameter[0].Value"; // current batch id
+        public const string StatusCurAmount = "ns=6;s=::Program:Cube.Status.Parameter[1].Value"; //amount to produce in current batch
         public const string StatusHumidity = "ns=6;s=::Program:Cube.Status.Parameter[2].Value";
         public const string StatusTemp = "ns=6;s=::Program:Cube.Status.Parameter[3].Value";
         public const string StatusMovement = "ns=6;s=::Program:Cube.Status.Parameter[4].Value"; // Vibration
