@@ -27,10 +27,11 @@ Content-Type: application/json
 {
     "Type": "batch",
     "Parameters": {
-        "id": 5,
+        "id": 1,
         "amount": 50,
         "speed": 100,
-        "type": 1
+        "type": 1,
+        "user": 1
     }
 }
 

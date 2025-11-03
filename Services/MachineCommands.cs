@@ -1,5 +1,3 @@
-using System.Linq;
-using Microsoft.Extensions.DependencyInjection;
 using Opc.UaFx;
 using Opc.UaFx.Client;
 using BeerMachineApi.Services.DTOs;
@@ -61,7 +59,7 @@ public class MachineCommands
         opcSession.WriteNodes(commands);
     }
 
-    protected void SaveBatch(BatchDTO batch, IServiceScopeFactory scopeFactory)
+    protected async void SaveBatch(BatchDTO batch, IServiceScopeFactory scopeFactory)
     {
         using var scope = scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<MachineDbContext>();
@@ -70,7 +68,7 @@ public class MachineCommands
 
         var entity = new Batch
         {
-            UserId = 1, // this should be set to batchDTO user
+            UserId = batch.UserId,
             Amount = (int)batch.Amount,
             AmountCompleted = 0,
             Failed = 0,
@@ -79,7 +77,7 @@ public class MachineCommands
             CreatedAt = nowUnspecified,
             UpdatedAt = nowUnspecified
         };
-        db.Batches.Add(entity);
+        await db.Batches.AddAsync(entity);
         db.SaveChanges();
     }
 
@@ -109,7 +107,7 @@ public class MachineCommands
 
         var nowUnspecified = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified);
 
-        existing.CompletedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified);
+        existing.CompletedAt = nowUnspecified;
         existing.UpdatedAt = nowUnspecified;
         db.SaveChanges();
     }
