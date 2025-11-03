@@ -1,4 +1,4 @@
-namespace BeerMachineApi.Services;
+namespace BeerMachineApi.Services.StatusModels;
 
 public class BatchStatusModel
 {
