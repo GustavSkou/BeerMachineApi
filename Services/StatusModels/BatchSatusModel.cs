@@ -2,8 +2,8 @@ namespace BeerMachineApi.Services.StatusModels;
 
 public class BatchStatusModel
 {
-    public float BatchId { get; set; }
-    public float BeerType { get; set; }
+    public float? BatchId { get; set; }
+    public float? BeerType { get; set; }
     public float Speed { get; set; }
     public float ToProduceAmount { get; set; }
     public int ProducedAmount { get; set; }
@@ -18,8 +18,8 @@ public class BatchStatusModel
 
     public BatchStatusModel()
     {
-        BatchId = 0;
-        BeerType = 0;
+        BatchId = null;
+        BeerType = null;
         Speed = 0;
         ToProduceAmount = 0;
         ProducedAmount = 0;

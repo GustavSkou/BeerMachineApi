@@ -15,15 +15,15 @@ namespace BeerMachineApi.Services
         private readonly string _serverURL;
         private Queue<Func<OpcClient>> _machineCommandQueue;
         private Queue<BatchDTO> _batchQueue;
-        private MachineDbContext _dbContext;
+        private readonly IServiceScopeFactory _scopeFactory;
 
-        public BeerMachineService(BeerMachineStatusModel beerMachineStatusModel, BatchStatusModel batchStatusModel, MachineDbContext dbContext, bool simulated = true)
+        public BeerMachineService(BeerMachineStatusModel beerMachineStatusModel, BatchStatusModel batchStatusModel, IServiceScopeFactory scopeFactory, bool simulated = true)
         {
             _machineStatusModel = beerMachineStatusModel;
             _batchStatusModel = batchStatusModel;
             _batchQueue = new Queue<BatchDTO>();
             _machineCommandQueue = new Queue<Func<OpcClient>>();
-            _dbContext = dbContext;
+            _scopeFactory = scopeFactory;
 
             switch (simulated)
             {
@@ -59,36 +59,52 @@ namespace BeerMachineApi.Services
 
         private void HandleProcessedChange(object sender, OpcDataChangeReceivedEventArgs e)
         {
-            Console.Clear();
-            // The 'sender' variable contains the OpcMonitoredItem with the NodeId
-            OpcMonitoredItem item = (OpcMonitoredItem)sender;
-
             _machineStatusModel.UpdateModel(_opcClient);
             _batchStatusModel.UpdateModel(_opcClient);
 
-            SaveTime(_batchStatusModel, _machineStatusModel, _dbContext); // Save time
-            UpdateBatchProducedAmount(_batchStatusModel, _dbContext); // Update the batch produced amount
-
-            if (_batchStatusModel.ProducedAmount == (int)_batchStatusModel.ToProduceAmount)
+            if (_batchStatusModel.BatchId == null || _batchStatusModel.BatchId == 0)
             {
-                UpdateBatchCompletedAt(_batchStatusModel, _dbContext); // update the batch to be completed
 
-                Thread.Sleep(500);
-                StopMachine(_opcClient);
-                Thread.Sleep(500);
-                ResetMachine(_opcClient);
-
-                if (_batchQueue.Count > 0) // if there is more batches in the queue
-                {
-                    Thread.Sleep(500);
-                    ExecuteCommand(new Command() { Type = "start" }); // start the next batch
-                }
-                else
-                {
-                    Console.WriteLine("no batches queued");
-                }
             }
-            Console.WriteLine($"Data Change {item.NodeId}: {e.Item.Value}\n{_machineStatusModel}\n{_batchStatusModel}");
+            else
+            {
+                Console.Clear();
+                // The 'sender' variable contains the OpcMonitoredItem with the NodeId
+                OpcMonitoredItem item = (OpcMonitoredItem)sender;
+
+
+
+
+                if (_batchStatusModel.BatchId != null)
+                {
+                    SaveTime(_batchStatusModel, _machineStatusModel, _scopeFactory); // Save time
+                    UpdateBatchProducedAmount(_batchStatusModel, _scopeFactory); // Update the batch produced amount
+                }
+
+
+
+
+                if (_batchStatusModel.ProducedAmount == (int)_batchStatusModel.ToProduceAmount)
+                {
+                    UpdateBatchCompletedAt(_batchStatusModel, _scopeFactory); // update the batch to be completed
+
+                    Thread.Sleep(500);
+                    StopMachine(_opcClient);
+                    Thread.Sleep(500);
+                    ResetMachine(_opcClient);
+
+                    if (_batchQueue.Count > 0) // if there is more batches in the queue
+                    {
+                        Thread.Sleep(500);
+                        ExecuteCommand(new Command() { Type = "start" }); // start the next batch
+                    }
+                    else
+                    {
+                        Console.WriteLine("no batches queued");
+                    }
+                }
+                Console.WriteLine($"Data Change {item.NodeId}: {e.Item.Value}\n{_machineStatusModel}\n{_batchStatusModel}");
+            }
         }
 
         public object GetStatus(string type)
@@ -129,7 +145,7 @@ namespace BeerMachineApi.Services
                 case "start":
                     BatchDTO batch = _batchQueue.Dequeue();
                     StartBatch(_opcClient, batch);
-                    SaveBatch(batch, _dbContext);
+                    SaveBatch(batch, _scopeFactory);
                     break;
 
                 case "reset":

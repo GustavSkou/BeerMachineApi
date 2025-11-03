@@ -1,3 +1,5 @@
+using System.Linq;
+using Microsoft.Extensions.DependencyInjection;
 using Opc.UaFx;
 using Opc.UaFx.Client;
 using BeerMachineApi.Services.DTOs;
@@ -59,52 +61,78 @@ public class MachineCommands
         opcSession.WriteNodes(commands);
     }
 
-    protected void SaveBatch(BatchDTO batch, MachineDbContext _dbContext)
+    protected void SaveBatch(BatchDTO batch, IServiceScopeFactory scopeFactory)
     {
+        using var scope = scopeFactory.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MachineDbContext>();
+
+        var nowUnspecified = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified);
+
         var entity = new Batch
         {
             UserId = 1, // this should be set to batchDTO user
             Amount = (int)batch.Amount,
+            AmountCompleted = 0,
+            Failed = 0,
             TypeId = (int)batch.Type,
-            StartedAt = DateTime.UtcNow
+            StartedAt = nowUnspecified,
+            CreatedAt = nowUnspecified,
+            UpdatedAt = nowUnspecified
         };
-        _dbContext.Batches.Add(entity);
-        _dbContext.SaveChanges();
+        db.Batches.Add(entity);
+        db.SaveChanges();
     }
 
-    protected void UpdateBatchProducedAmount(BatchStatusModel batchStatusModel, MachineDbContext dbContext)
+    protected void UpdateBatchProducedAmount(BatchStatusModel batchStatusModel, IServiceScopeFactory scopeFactory)
     {
-        var existing = dbContext.Batches.FirstOrDefault(b => b.Id == batchStatusModel.BatchId);
-        if (existing == null) return; // or throw new InvalidOperationException($"Batch {batch.Id} not found");
+        using var scope = scopeFactory.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MachineDbContext>();
+
+        var existing = db.Batches.FirstOrDefault(b => b.Id == (int)batchStatusModel.BatchId);
+        if (existing == null) return;
+
+        var nowUnspecified = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified);
 
         existing.Failed = batchStatusModel.DefectiveAmount;
         existing.AmountCompleted = batchStatusModel.ProducedAmount;
-        dbContext.SaveChanges();
+        existing.UpdatedAt = nowUnspecified;
+        db.SaveChanges();
     }
 
-    protected void UpdateBatchCompletedAt(BatchStatusModel batchStatusModel, MachineDbContext dbContext)
+    protected void UpdateBatchCompletedAt(BatchStatusModel batchStatusModel, IServiceScopeFactory scopeFactory)
     {
-        var existing = dbContext.Batches.FirstOrDefault(b => b.Id == batchStatusModel.BatchId);
-        if (existing == null) return; // or throw new InvalidOperationException($"Batch {batch.Id} not found");
+        using var scope = scopeFactory.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MachineDbContext>();
 
-        existing.CompletedAt = DateTime.UtcNow;
+        var existing = db.Batches.FirstOrDefault(b => b.Id == (int)batchStatusModel.BatchId);
+        if (existing == null) return;
 
-        dbContext.SaveChanges();
+        var nowUnspecified = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified);
+
+        existing.CompletedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified);
+        existing.UpdatedAt = nowUnspecified;
+        db.SaveChanges();
     }
 
-    protected void SaveTime(BatchStatusModel batchStatusModel, BeerMachineStatusModel machineStatusModel, MachineDbContext dbContext)
+    protected void SaveTime(BatchStatusModel batchStatusModel, BeerMachineStatusModel machineStatusModel, IServiceScopeFactory scopeFactory)
     {
+        using var scope = scopeFactory.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MachineDbContext>();
+
+        var nowUnspecified = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified);
+
         var timeEntity = new Time
         {
             BatchId = (int)batchStatusModel.BatchId,
             Temperature = machineStatusModel.Temperature,
             Humidity = machineStatusModel.Humidity,
             Vibration = machineStatusModel.Vibration,
-            TimeStamp = DateTime.UtcNow
+            TimeStamp = nowUnspecified,
+            CreatedAt = nowUnspecified,
+            UpdatedAt = nowUnspecified
         };
-        dbContext.Times.Add(timeEntity);
-        dbContext.SaveChanges();
+
+        db.Times.Add(timeEntity);
+        db.SaveChanges();
     }
-
-
 }

@@ -1,37 +1,40 @@
+using Microsoft.EntityFrameworkCore;
 using BeerMachineApi.Services;
 using BeerMachineApi.Repository;
 using BeerMachineApi.Services.StatusModels;
 
-public class Program
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDbContext<MachineDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// register IMachineService but inject IServiceScopeFactory instead of resolving MachineDbContext here
+builder.Services.AddSingleton<IMachineService>(sp =>
 {
-    static void Main(string[] args)
-    {
-        // Run the BeerMachineHandler on a thread so the process does not block the api
+    var scopeFactory = sp.GetRequiredService<IServiceScopeFactory>();
+    return new BeerMachineService(
+        new BeerMachineStatusModel(),
+        new BatchStatusModel(),
+        scopeFactory // pass factory, not DbContext
+    );
+});
 
-        IMachineService machineService = new BeerMachineService(
-            new BeerMachineStatusModel(),
-            new BatchStatusModel(),
-            new MachineDbContext()
-        );
+builder.Services.AddControllers();
+builder.Services.AddOpenApi();
 
-        Thread thread = new Thread(machineService.Start);
-        thread.Start();
+var app = builder.Build();
 
-        var builder = WebApplication.CreateBuilder(args); // build and run api
-        //builder.Services.AddDbContext<MachineDbContext>(options =>
-        //    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+// resolve and start as before
+var machineService = app.Services.GetRequiredService<IMachineService>();
+Thread thread = new Thread(machineService.Start);
+thread.Start();
 
-        builder.Services.AddControllers(); // Add services to the container.
-        builder.Services.AddOpenApi(); // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-        builder.Services.AddSingleton(machineService);
-        var app = builder.Build();
-        if (app.Environment.IsDevelopment()) // Configure the HTTP request pipeline.
-        {
-            app.MapOpenApi();
-        }
-        app.UseHttpsRedirection();
-        app.UseAuthorization();
-        app.MapControllers();
-        app.Run();
-    }
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
 }
+
+app.UseHttpsRedirection();
+app.UseAuthorization();
+app.MapControllers();
+app.Run();
