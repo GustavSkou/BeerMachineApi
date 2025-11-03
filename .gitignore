@@ -43,3 +43,5 @@ Thumbs.db
 *.key
 
 appsettings.json
+appsettings.json
+*.json

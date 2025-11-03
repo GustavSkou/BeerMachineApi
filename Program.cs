@@ -1,6 +1,6 @@
 using BeerMachineApi.Services;
 using BeerMachineApi.Repository;
-using Microsoft.EntityFrameworkCore;
+using BeerMachineApi.Services.StatusModels;
 
 public class Program
 {
@@ -8,7 +8,12 @@ public class Program
     {
         // Run the BeerMachineHandler on a thread so the process does not block the api
 
-        IMachineService machineService = new BeerMachineService(new BeerMachineStatusModel(), new BatchStatusModel(), new BatchQueue());
+        IMachineService machineService = new BeerMachineService(
+            new BeerMachineStatusModel(),
+            new BatchStatusModel(),
+            new MachineDbContext()
+        );
+
         Thread thread = new Thread(machineService.Start);
         thread.Start();
 

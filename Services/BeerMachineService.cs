@@ -1,21 +1,29 @@
 using Opc.UaFx;
 using Opc.UaFx.Client;
 
+using BeerMachineApi.Services.DTOs;
+using BeerMachineApi.Services.StatusModels;
+using BeerMachineApi.Repository;
+
 namespace BeerMachineApi.Services
 {
     public class BeerMachineService : MachineCommands, IMachineService
     {
         private BeerMachineStatusModel _machineStatusModel;
         private BatchStatusModel _batchStatusModel;
-        private BatchQueue _batchQueue;
         private OpcClient? _opcClient;
         private readonly string _serverURL;
+        private Queue<Func<OpcClient>> _machineCommandQueue;
+        private Queue<BatchDTO> _batchQueue;
+        private MachineDbContext _dbContext;
 
-        public BeerMachineService(BeerMachineStatusModel beerMachineStatusModel, BatchStatusModel batchStatusModel, BatchQueue batchQueue, bool simulated = true)
+        public BeerMachineService(BeerMachineStatusModel beerMachineStatusModel, BatchStatusModel batchStatusModel, MachineDbContext dbContext, bool simulated = true)
         {
             _machineStatusModel = beerMachineStatusModel;
             _batchStatusModel = batchStatusModel;
-            _batchQueue = batchQueue;
+            _batchQueue = new Queue<BatchDTO>();
+            _machineCommandQueue = new Queue<Func<OpcClient>>();
+            _dbContext = dbContext;
 
             switch (simulated)
             {
@@ -51,25 +59,29 @@ namespace BeerMachineApi.Services
 
         private void HandleProcessedChange(object sender, OpcDataChangeReceivedEventArgs e)
         {
-            // The 'sender' variable contains the OpcMonitoredItem with the NodeId.
+            Console.Clear();
+            // The 'sender' variable contains the OpcMonitoredItem with the NodeId
             OpcMonitoredItem item = (OpcMonitoredItem)sender;
 
             _machineStatusModel.UpdateModel(_opcClient);
             _batchStatusModel.UpdateModel(_opcClient);
 
-            Console.Clear();
-            Console.WriteLine(_batchQueue.Count);
+            SaveTime(_batchStatusModel, _machineStatusModel, _dbContext); // Save time
+            UpdateBatchProducedAmount(_batchStatusModel, _dbContext); // Update the batch produced amount
+
             if (_batchStatusModel.ProducedAmount == (int)_batchStatusModel.ToProduceAmount)
             {
+                UpdateBatchCompletedAt(_batchStatusModel, _dbContext); // update the batch to be completed
+
                 Thread.Sleep(500);
                 StopMachine(_opcClient);
                 Thread.Sleep(500);
                 ResetMachine(_opcClient);
 
-                if (_batchQueue.Count > 0)
+                if (_batchQueue.Count > 0) // if there is more batches in the queue
                 {
                     Thread.Sleep(500);
-                    StartBatch(_opcClient, _batchQueue);
+                    ExecuteCommand(new Command() { Type = "start" }); // start the next batch
                 }
                 else
                 {
@@ -99,6 +111,8 @@ namespace BeerMachineApi.Services
 
         public void ExecuteCommand(Command command)
         {
+            if (_opcClient == null) throw new Exception("OpcClient error");
+
             switch (command.Type.ToLower())
             {
                 case "batch":
@@ -110,12 +124,12 @@ namespace BeerMachineApi.Services
                         command.Parameters["speed"],
                         command.Parameters["type"]
                     ));
-
-
                     break;
 
                 case "start":
-                    StartBatch(_opcClient, _batchQueue);
+                    BatchDTO batch = _batchQueue.Dequeue();
+                    StartBatch(_opcClient, batch);
+                    SaveBatch(batch, _dbContext);
                     break;
 
                 case "reset":
@@ -132,6 +146,10 @@ namespace BeerMachineApi.Services
 
                 case "disconnect":
                     DisconnectFromServer(_opcClient);
+                    break;
+
+                case "pause":
+
                     break;
 
                 default:

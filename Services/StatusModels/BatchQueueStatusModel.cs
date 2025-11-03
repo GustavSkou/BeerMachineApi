@@ -1,4 +1,6 @@
+/*namespace BeerMachineApi.Services.StatusModels;
+
 public class BatchQueueStatusModel
 {
-    public Dictionary<string, int>? Parameters { get; set; }
-}
+
+}*/
