@@ -1,3 +1,5 @@
+namespace BeerMachineApi.Services.DTOs;
+
 public class BatchDTO
 {
     public float Id { get; set; }
