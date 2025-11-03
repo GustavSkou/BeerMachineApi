@@ -5,20 +5,10 @@ using BeerMachineApi.Services.StatusModels;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<MachineDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-// register IMachineService but inject IServiceScopeFactory instead of resolving MachineDbContext here
-builder.Services.AddSingleton<IMachineService>(sp =>
-{
-    var scopeFactory = sp.GetRequiredService<IServiceScopeFactory>();
-    return new BeerMachineService(
-        new BeerMachineStatusModel(),
-        new BatchStatusModel(),
-        scopeFactory // pass factory, not DbContext
-    );
-});
-
+builder.Services.AddDbContext<MachineDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddSingleton<IMachineService, BeerMachineService>();
+builder.Services.AddTransient<BeerMachineStatusModel>();
+builder.Services.AddTransient<BatchStatusModel>();
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
