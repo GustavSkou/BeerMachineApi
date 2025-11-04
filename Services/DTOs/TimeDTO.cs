@@ -1,4 +1,5 @@
-using BeerMachineApi.Services.DTOs;
+namespace BeerMachineApi.Services.DTOs;
+
 public class TimeDTO
 {
     public long Id { get; set; }
@@ -11,14 +12,11 @@ public class TimeDTO
 
     public double Vibration { get; set; }
 
-    public DateTime TimeStamp { get; set; }
-
-    public TimeDTO(int batchId, float temperature, float humidity, float vibration, DateTime timeStamp)
+    public TimeDTO(int batchId, float temperature, float humidity, float vibration)
     {
         BatchId = batchId;
         Temperature = temperature;
         Humidity = humidity;
         Vibration = vibration;
-        TimeStamp = timeStamp;
     }
 }

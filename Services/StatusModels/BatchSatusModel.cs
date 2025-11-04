@@ -8,6 +8,7 @@ public class BatchStatusModel
     public float ToProduceAmount { get; set; }
     public int ProducedAmount { get; set; }
     public int DefectiveAmount { get; set; }
+    public int UserId { get; set; }
     public float FailureRate
     {
         get
@@ -34,6 +35,11 @@ public class BatchStatusModel
         ToProduceAmount = Convert.ToSingle(session.ReadNode(NodeIds.StatusCurAmount).Value);
         ProducedAmount = Convert.ToInt32(session.ReadNode(NodeIds.AdminProcessedCount).Value);
         DefectiveAmount = Convert.ToInt32(session.ReadNode(NodeIds.AdminDefectiveCount).Value);
+    }
+
+    public bool IsBatchDone ()
+    {
+        return ToProduceAmount == ProducedAmount;
     }
 
     public override string ToString()

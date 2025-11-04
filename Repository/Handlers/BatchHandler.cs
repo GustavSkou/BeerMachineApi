@@ -1,10 +1,13 @@
 using BeerMachineApi.Repository;
 using BeerMachineApi.Services.DTOs;
-public class BatchHandler : IBatchHandler
+
+public class BatchHandler : EntityHandler, IBatchHandler
 {
-    public async void SaveBatchAsync(BatchDTO batch, IServiceScopeFactory scopeFactory)
+    public BatchHandler( IServiceScopeFactory scopeFactory ) : base ( scopeFactory ) { }
+
+    public async void SaveBatchAsync(BatchDTO batch)
     {
-        using var scope = scopeFactory.CreateScope();
+        using var scope = _scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<MachineDbContext>();
 
         var nowUnspecified = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified);
@@ -24,9 +27,9 @@ public class BatchHandler : IBatchHandler
         db.SaveChanges();
     }
 
-    public async void SaveBatchChangesAsync(BatchDTO batch, IServiceScopeFactory scopeFactory)
+    public async void SaveBatchChangesAsync(BatchDTO batch)
     {
-        using var scope = scopeFactory.CreateScope();
+        using var scope = _scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<MachineDbContext>();
 
         var existing = db.Batches.FirstOrDefault(b => b.Id == (int)batch.Id);

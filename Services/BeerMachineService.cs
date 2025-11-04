@@ -4,181 +4,193 @@ using Opc.UaFx.Client;
 using BeerMachineApi.Services.DTOs;
 using BeerMachineApi.Services.StatusModels;
 using BeerMachineApi.Repository;
-using System.Diagnostics.CodeAnalysis;
 
-namespace BeerMachineApi.Services
+namespace BeerMachineApi.Services;
+
+public class BeerMachineService : MachineCommands, IMachineService
 {
-    public class BeerMachineService : MachineCommands, IMachineService
+    private BeerMachineStatusModel _machineStatusModel;
+    private BatchStatusModel _batchStatusModel;
+    private OpcClient? _opcClient;
+    private readonly string _serverURL;
+    private Queue<Func<OpcClient>> _machineCommandQueue;
+    private Queue<BatchDTO> _batchQueue;
+    private readonly IBatchHandler _iBatchHandler;
+    private readonly ITimeHandler _iTimeHandler;
+
+    public BeerMachineService (
+        BeerMachineStatusModel beerMachineStatusModel, 
+        BatchStatusModel batchStatusModel, 
+        IBatchHandler iBatchHandler, 
+        ITimeHandler iTimehandler, 
+        bool simulated = true 
+    )
     {
-        private BeerMachineStatusModel _machineStatusModel;
-        private BatchStatusModel _batchStatusModel;
-        private OpcClient? _opcClient;
-        private readonly string _serverURL;
-        private Queue<Func<OpcClient>> _machineCommandQueue;
-        private Queue<BatchDTO> _batchQueue;
-        private readonly IBatchHandler _IBatchHandler;
-        private readonly ITimeHandler _ITimeHandler;
+        _machineStatusModel = beerMachineStatusModel;
+        _batchStatusModel = batchStatusModel;
 
-        public BeerMachineService(BeerMachineStatusModel beerMachineStatusModel, BatchStatusModel batchStatusModel, IBatchHandler iBatchHandler, ITimeHandler iTimehandler, bool simulated = true)
+        _iTimeHandler = iTimehandler;
+        _iBatchHandler = iBatchHandler;
+
+        _batchQueue = new Queue<BatchDTO>();
+        _machineCommandQueue = new Queue<Func<OpcClient>>();
+
+        switch (simulated)
         {
-            _machineStatusModel = beerMachineStatusModel;
-            _batchStatusModel = batchStatusModel;
+            case true:
+                _serverURL = "opc.tcp://127.0.0.1:4840"; //Simulated PLC
+                break;
 
-            _ITimeHandler = iTimehandler;
-            _IBatchHandler = iBatchHandler;
+            case false:
+                _serverURL = "opc.tcp://192.168.0.122:4840"; //Physical PLC
+                break;
+        }
+    }
 
-            _batchQueue = new Queue<BatchDTO>();
-            _machineCommandQueue = new Queue<Func<OpcClient>>();
+    public void Start()
+    {
+        using (_opcClient = new OpcClient(_serverURL))
+        {
+            ConnectToServer(_opcClient);
 
-            switch (simulated)
+            // when there is a change to the amount of processed beers the method HandleDataChanged is called
+            OpcSubscribeDataChange[] subscriptions = {
+                new OpcSubscribeDataChange(NodeIds.AdminProcessedCount, HandleProcessedChange)
+            };
+
+            OpcSubscription subscription = _opcClient.SubscribeNodes(subscriptions);
+
+            while (true)
             {
-                case true:
-                    _serverURL = "opc.tcp://127.0.0.1:4840"; //Simulated PLC
-                    break;
 
-                case false:
-                    _serverURL = "opc.tcp://192.168.0.122:4840"; //Physical PLC
-                    break;
             }
         }
+    }
 
-        public void Start()
+    private void HandleProcessedChange(object sender, OpcDataChangeReceivedEventArgs e)
+    {
+        // The 'sender' variable contains the OpcMonitoredItem with the NodeId
+        OpcMonitoredItem item = (OpcMonitoredItem)sender;
+
+        _machineStatusModel.UpdateModel(_opcClient);
+        _batchStatusModel.UpdateModel(_opcClient);
+            
+        if (_batchStatusModel.BatchId == null || _batchStatusModel.BatchId == 0)
+            return;
+
+        _iTimeHandler.SaveTimeAsync( new TimeDTO(
+            (int) _batchStatusModel.BatchId, 
+            _machineStatusModel.Temperature, 
+            _machineStatusModel.Humidity, 
+            _machineStatusModel.Vibration
+        ) );
+
+        _iBatchHandler.SaveBatchChangesAsync ( new BatchDTO ()
         {
-            using (_opcClient = new OpcClient(_serverURL))
+            Id = (float) _batchStatusModel.BatchId,
+            ProducedAmount = _batchStatusModel.ProducedAmount,
+            DefectiveAmount = _batchStatusModel.DefectiveAmount,
+        } );
+            
+
+        if ( _batchStatusModel.IsBatchDone () )
+        {
+            // save when batch is done will mark it as completed in db
+            _iBatchHandler.SaveBatchChangesAsync ( new BatchDTO ()
             {
+                Id = (float) _batchStatusModel.BatchId,
+                Amount = _batchStatusModel.ToProduceAmount,
+                ProducedAmount = _batchStatusModel.ProducedAmount,
+                DefectiveAmount = _batchStatusModel.DefectiveAmount,
+            } );
+            HandleBatchProcess ();
+        }
+        Console.Clear ();
+        Console.WriteLine($"Data Change {item.NodeId}: {e.Item.Value}\n{_machineStatusModel}\n{_batchStatusModel}");
+    }
+    /// <summary>
+    /// The machine is stop and reset, if the queue is not empty the next batch will be started
+    /// </summary>
+    private void HandleBatchProcess ()
+    {
+        Thread.Sleep ( 500 );
+        StopMachine ( _opcClient );
+        Thread.Sleep ( 500 );
+        ResetMachine ( _opcClient );
+
+        // If there is more batches in the queue, the next should be started
+        if ( _batchQueue.Count > 0 )
+        {
+            Thread.Sleep ( 500 );
+            ExecuteCommand ( new Command () { Type = "start" } ); // start the next batch
+        }
+    }
+
+    public object GetStatus(string type)
+    {
+        switch (type)
+        {
+            case "machine":
+                return _machineStatusModel;
+
+            case "batch":
+                return _batchStatusModel;
+
+            case "queue":
+
+
+            default:
+                throw new Exception("status time does not exist");
+        }
+    }
+
+    public void ExecuteCommand(Command command)
+    {
+        if (_opcClient == null) throw new Exception("OpcClient error");
+
+        switch (command.Type.ToLower())
+        {
+            case "batch":
+                if (command.Parameters == null)
+                    throw new Exception("batch command parameters cannot be null");
+
+                _batchQueue.Enqueue( new BatchDTO () {
+                    Id = command.Parameters["id"],
+                    Amount = command.Parameters["amount"],
+                    Speed = command.Parameters["speed"],
+                    Type = command.Parameters["type"],
+                    UserId = command.Parameters["user"]
+                } );
+                break;
+
+            case "start":
+                BatchDTO batch = _batchQueue.Dequeue();
+                StartBatch(_opcClient, batch);
+                _iBatchHandler.SaveBatchAsync ( batch );
+                break;
+
+            case "reset":
+                ResetMachine(_opcClient);
+                break;
+
+            case "stop":
+                StopMachine(_opcClient);
+                break;
+
+            case "connect":
                 ConnectToServer(_opcClient);
+                break;
 
-                // when there is a change to the amount of processed beers the method HandleDataChanged is called
-                OpcSubscribeDataChange[] subscriptions = {
-                    new OpcSubscribeDataChange(NodeIds.AdminProcessedCount, HandleProcessedChange)
-                };
+            case "disconnect":
+                DisconnectFromServer(_opcClient);
+                break;
 
-                OpcSubscription subscription = _opcClient.SubscribeNodes(subscriptions);
+            case "pause":
 
-                while (true)
-                {
+                break;
 
-                }
-            }
-        }
-
-        private void HandleProcessedChange(object sender, OpcDataChangeReceivedEventArgs e)
-        {
-            _machineStatusModel.UpdateModel(_opcClient);
-            _batchStatusModel.UpdateModel(_opcClient);
-
-            if (_batchStatusModel.BatchId == null || _batchStatusModel.BatchId == 0)
-            {
-
-            }
-            else
-            {
-                Console.Clear();
-                // The 'sender' variable contains the OpcMonitoredItem with the NodeId
-                OpcMonitoredItem item = (OpcMonitoredItem)sender;
-
-
-                if (_batchStatusModel.BatchId != null)
-                {
-                    _ITimeHandler.SaveTimeAsync(new TimeDTO(_batchStatusModel.BatchId, _machineStatusModel.Temperature, _machineStatusModel.Humidity, _machineStatusModel.Vibration, timeStamp.UtcNow())); // Save time
-                    _IBatchHandler.SaveBatchChangesAsync(
-                        new BatchDTO(
-                            _batchStatusModel.BatchId,
-                            _batchStatusModel.ToProduceAmount,
-                            _batchStatusModel.Speed,
-                            _batchStatusModel.BeerType,
-                            _batchStatusModel.
-                            );)
-                    
-                    UpdateBatchProducedAmount(_batchStatusModel); // Update the batch produced amount
-                }
-
-                if (_batchStatusModel.ProducedAmount == (int)_batchStatusModel.ToProduceAmount)
-                {
-                    UpdateBatchCompletedAt(_batchStatusModel, _scopeFactory); // update the batch to be completed
-
-                    Thread.Sleep(500);
-                    StopMachine(_opcClient);
-                    Thread.Sleep(500);
-                    ResetMachine(_opcClient);
-
-                    // If there is more batches in the queue
-                    if (_batchQueue.Count > 0)
-                    {
-                        Thread.Sleep(500);
-                        ExecuteCommand(new Command() { Type = "start" }); // start the next batch
-                    }
-                }
-                Console.WriteLine($"Data Change {item.NodeId}: {e.Item.Value}\n{_machineStatusModel}\n{_batchStatusModel}");
-            }
-        }
-
-        public object GetStatus(string type)
-        {
-            switch (type)
-            {
-                case "machine":
-                    return _machineStatusModel;
-
-                case "batch":
-                    return _batchStatusModel;
-
-                case "queue":
-
-
-                default:
-                    throw new Exception("status time does not exist");
-            }
-        }
-
-        public void ExecuteCommand(Command command)
-        {
-            if (_opcClient == null) throw new Exception("OpcClient error");
-
-            switch (command.Type.ToLower())
-            {
-                case "batch":
-                    if (command.Parameters == null)
-                        throw new Exception("batch command parameters cannot be null");
-
-                    _batchQueue.Enqueue(new BatchDTO(
-                        command.Parameters["id"],
-                        command.Parameters["amount"],
-                        command.Parameters["speed"],
-                        command.Parameters["type"],
-                        command.Parameters["user"]
-                    ));
-                    break;
-
-                case "start":
-                    BatchDTO batch = _batchQueue.Dequeue();
-                    StartBatch(_opcClient, batch);
-                    SaveBatch(batch, _scopeFactory);
-                    break;
-
-                case "reset":
-                    ResetMachine(_opcClient);
-                    break;
-
-                case "stop":
-                    StopMachine(_opcClient);
-                    break;
-
-                case "connect":
-                    ConnectToServer(_opcClient);
-                    break;
-
-                case "disconnect":
-                    DisconnectFromServer(_opcClient);
-                    break;
-
-                case "pause":
-
-                    break;
-
-                default:
-                    throw new Exception($"No command matching type {command.Type}");
-            }
+            default:
+                throw new Exception($"No command matching type {command.Type}");
         }
     }
 }

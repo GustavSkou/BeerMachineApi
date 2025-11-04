@@ -1,11 +1,13 @@
 using BeerMachineApi.Repository;
 using BeerMachineApi.Services.DTOs;
 
-public class TimeHandler : ITimeHandler
+public class TimeHandler : EntityHandler, ITimeHandler
 {
-    public async void SaveTimeAsync(TimeDTO time, IServiceScopeFactory scopeFactory)
+    public TimeHandler ( IServiceScopeFactory scopeFactory ) : base ( scopeFactory ) { }
+
+    public async void SaveTimeAsync(TimeDTO time)
     {
-        using var scope = scopeFactory.CreateScope();
+        using var scope = _scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<MachineDbContext>();
 
         var nowUnspecified = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified);
