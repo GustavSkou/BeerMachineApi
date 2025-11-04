@@ -9,6 +9,10 @@ builder.Services.AddDbContext<MachineDbContext>(options => options.UseNpgsql(bui
 builder.Services.AddSingleton<IMachineService, BeerMachineService>();
 builder.Services.AddTransient<BeerMachineStatusModel>();
 builder.Services.AddTransient<BatchStatusModel>();
+
+builder.Services.AddTransient<IBatchHandler, BatchHandler>();
+builder.Services.AddTransient<ITimeHandler, TimeHandler>();
+
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 

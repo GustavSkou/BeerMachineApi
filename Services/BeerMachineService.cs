@@ -4,6 +4,7 @@ using Opc.UaFx.Client;
 using BeerMachineApi.Services.DTOs;
 using BeerMachineApi.Services.StatusModels;
 using BeerMachineApi.Repository;
+using System.Diagnostics.CodeAnalysis;
 
 namespace BeerMachineApi.Services
 {
@@ -15,13 +16,16 @@ namespace BeerMachineApi.Services
         private readonly string _serverURL;
         private Queue<Func<OpcClient>> _machineCommandQueue;
         private Queue<BatchDTO> _batchQueue;
-        private readonly IServiceScopeFactory _scopeFactory;
+        private readonly IBatchHandler _IBatchHandler;
+        private readonly ITimeHandler _ITimeHandler;
 
-        public BeerMachineService(BeerMachineStatusModel beerMachineStatusModel, BatchStatusModel batchStatusModel, IServiceScopeFactory scopeFactory, bool simulated = true)
+        public BeerMachineService(BeerMachineStatusModel beerMachineStatusModel, BatchStatusModel batchStatusModel, IBatchHandler iBatchHandler, ITimeHandler iTimehandler, bool simulated = true)
         {
             _machineStatusModel = beerMachineStatusModel;
             _batchStatusModel = batchStatusModel;
-            _scopeFactory = scopeFactory;
+
+            _ITimeHandler = iTimehandler;
+            _IBatchHandler = iBatchHandler;
 
             _batchQueue = new Queue<BatchDTO>();
             _machineCommandQueue = new Queue<Func<OpcClient>>();
@@ -76,8 +80,17 @@ namespace BeerMachineApi.Services
 
                 if (_batchStatusModel.BatchId != null)
                 {
-                    SaveTime(_batchStatusModel, _machineStatusModel, _scopeFactory); // Save time
-                    UpdateBatchProducedAmount(_batchStatusModel, _scopeFactory); // Update the batch produced amount
+                    _ITimeHandler.SaveTimeAsync(new TimeDTO(_batchStatusModel.BatchId, _machineStatusModel.Temperature, _machineStatusModel.Humidity, _machineStatusModel.Vibration, timeStamp.UtcNow())); // Save time
+                    _IBatchHandler.SaveBatchChangesAsync(
+                        new BatchDTO(
+                            _batchStatusModel.BatchId,
+                            _batchStatusModel.ToProduceAmount,
+                            _batchStatusModel.Speed,
+                            _batchStatusModel.BeerType,
+                            _batchStatusModel.
+                            );)
+                    
+                    UpdateBatchProducedAmount(_batchStatusModel); // Update the batch produced amount
                 }
 
                 if (_batchStatusModel.ProducedAmount == (int)_batchStatusModel.ToProduceAmount)

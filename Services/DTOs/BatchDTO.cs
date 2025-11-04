@@ -12,6 +12,8 @@ public class BatchDTO
     public float Speed { get; set; }
     public float Type { get; set; }
     public int UserId { get; set; }
+    public int DefectiveAmount { get; set; }
+    public int ProducedAmount { get; set; }
 
     public BatchDTO(float id, float amount, float speed, float type, int userId)
     {
