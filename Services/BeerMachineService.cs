@@ -56,6 +56,8 @@ public class BeerMachineService : MachineCommands, IMachineService
         {
             ConnectToServer(_opcClient);
 
+            _inventoryStatusModel.UpdateModel(_opcClient);
+
             OpcSubscribeDataChange[] subscriptions = {
                 new OpcSubscribeDataChange(NodeIds.AdminProcessedCount, HandleProcessedChange),
                 new OpcSubscribeDataChange(NodeIds.Barley, HandleInventoryChange),
