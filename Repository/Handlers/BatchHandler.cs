@@ -39,7 +39,6 @@ public class BatchHandler : EntityHandler, IBatchHandler
 
         existing.Failed = batch.DefectiveAmount;
         existing.AmountCompleted = batch.ProducedAmount;
-        existing.UpdatedAt = nowUnspecified;
         existing.AmountCompleted = batch.DefectiveAmount;
         existing.Failed = batch.DefectiveAmount;
         existing.UpdatedAt = nowUnspecified;

@@ -7,8 +7,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<MachineDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddSingleton<IMachineService, BeerMachineService>();
+
 builder.Services.AddTransient<BeerMachineStatusModel>();
 builder.Services.AddTransient<BatchStatusModel>();
+builder.Services.AddTransient<InventoryStatusModel>();
 
 builder.Services.AddTransient<IBatchHandler, BatchHandler>();
 builder.Services.AddTransient<ITimeHandler, TimeHandler>();

@@ -11,6 +11,7 @@ public class BeerMachineService : MachineCommands, IMachineService
 {
     private BeerMachineStatusModel _machineStatusModel;
     private BatchStatusModel _batchStatusModel;
+    private InventoryStatusModel _inventoryStatusModel;
     private OpcClient? _opcClient;
     private readonly string _serverURL;
     private Queue<Func<OpcClient>> _machineCommandQueue;
@@ -18,16 +19,18 @@ public class BeerMachineService : MachineCommands, IMachineService
     private readonly IBatchHandler _iBatchHandler;
     private readonly ITimeHandler _iTimeHandler;
 
-    public BeerMachineService (
-        BeerMachineStatusModel beerMachineStatusModel, 
-        BatchStatusModel batchStatusModel, 
-        IBatchHandler iBatchHandler, 
-        ITimeHandler iTimehandler, 
-        bool simulated = true 
+    public BeerMachineService(
+        BeerMachineStatusModel beerMachineStatusModel,
+        BatchStatusModel batchStatusModel,
+        InventoryStatusModel inventoryStatusModel,
+        IBatchHandler iBatchHandler,
+        ITimeHandler iTimehandler,
+        bool simulated = true
     )
     {
         _machineStatusModel = beerMachineStatusModel;
         _batchStatusModel = batchStatusModel;
+        _inventoryStatusModel = inventoryStatusModel;
 
         _iTimeHandler = iTimehandler;
         _iBatchHandler = iBatchHandler;
@@ -53,9 +56,13 @@ public class BeerMachineService : MachineCommands, IMachineService
         {
             ConnectToServer(_opcClient);
 
-            // when there is a change to the amount of processed beers the method HandleDataChanged is called
             OpcSubscribeDataChange[] subscriptions = {
-                new OpcSubscribeDataChange(NodeIds.AdminProcessedCount, HandleProcessedChange)
+                new OpcSubscribeDataChange(NodeIds.AdminProcessedCount, HandleProcessedChange),
+                new OpcSubscribeDataChange(NodeIds.Barley, HandleInventoryChange),
+                new OpcSubscribeDataChange(NodeIds.Malt, HandleInventoryChange),
+                new OpcSubscribeDataChange(NodeIds.Yeast, HandleInventoryChange),
+                new OpcSubscribeDataChange(NodeIds.Wheat, HandleInventoryChange),
+                new OpcSubscribeDataChange(NodeIds.Hops, HandleInventoryChange)
             };
 
             OpcSubscription subscription = _opcClient.SubscribeNodes(subscriptions);
@@ -74,55 +81,65 @@ public class BeerMachineService : MachineCommands, IMachineService
 
         _machineStatusModel.UpdateModel(_opcClient);
         _batchStatusModel.UpdateModel(_opcClient);
-            
+
         if (_batchStatusModel.BatchId == null || _batchStatusModel.BatchId == 0)
             return;
 
-        _iTimeHandler.SaveTimeAsync( new TimeDTO(
-            (int) _batchStatusModel.BatchId, 
-            _machineStatusModel.Temperature, 
-            _machineStatusModel.Humidity, 
+        _iTimeHandler.SaveTimeAsync(new TimeDTO(
+            (int)_batchStatusModel.BatchId,
+            _machineStatusModel.Temperature,
+            _machineStatusModel.Humidity,
             _machineStatusModel.Vibration
-        ) );
+        ));
 
-        _iBatchHandler.SaveBatchChangesAsync ( new BatchDTO ()
+        _iBatchHandler.SaveBatchChangesAsync(new BatchDTO()
         {
-            Id = (float) _batchStatusModel.BatchId,
+            Id = (float)_batchStatusModel.BatchId,
             ProducedAmount = _batchStatusModel.ProducedAmount,
             DefectiveAmount = _batchStatusModel.DefectiveAmount,
-        } );
-            
+        });
 
-        if ( _batchStatusModel.IsBatchDone () )
+        if (_batchStatusModel.IsBatchDone())
         {
             // save when batch is done will mark it as completed in db
-            _iBatchHandler.SaveBatchChangesAsync ( new BatchDTO ()
+            _iBatchHandler.SaveBatchChangesAsync(new BatchDTO()
             {
-                Id = (float) _batchStatusModel.BatchId,
+                Id = (float)_batchStatusModel.BatchId,
                 Amount = _batchStatusModel.ToProduceAmount,
                 ProducedAmount = _batchStatusModel.ProducedAmount,
                 DefectiveAmount = _batchStatusModel.DefectiveAmount,
-            } );
-            HandleBatchProcess ();
+            });
+            HandleBatchProcess();
         }
-        Console.Clear ();
+        Console.Clear();
         Console.WriteLine($"Data Change {item.NodeId}: {e.Item.Value}\n{_machineStatusModel}\n{_batchStatusModel}");
     }
+
+    private void HandleInventoryChange(object sender, OpcDataChangeReceivedEventArgs e)
+    {
+        _inventoryStatusModel.UpdateModel(_opcClient);
+    }
+
+    private void HandleMaintenanceChange(object sender, OpcDataChangeReceivedEventArgs e)
+    {
+
+    }
+
     /// <summary>
     /// The machine is stop and reset, if the queue is not empty the next batch will be started
     /// </summary>
-    private void HandleBatchProcess ()
+    private void HandleBatchProcess()
     {
-        Thread.Sleep ( 500 );
-        StopMachine ( _opcClient );
-        Thread.Sleep ( 500 );
-        ResetMachine ( _opcClient );
+        Thread.Sleep(500);
+        StopMachine(_opcClient);
+        Thread.Sleep(500);
+        ResetMachine(_opcClient);
 
         // If there is more batches in the queue, the next should be started
-        if ( _batchQueue.Count > 0 )
+        if (_batchQueue.Count > 0)
         {
-            Thread.Sleep ( 500 );
-            ExecuteCommand ( new Command () { Type = "start" } ); // start the next batch
+            Thread.Sleep(500);
+            ExecuteCommand(new Command() { Type = "start" }); // start the next batch
         }
     }
 
@@ -136,7 +153,8 @@ public class BeerMachineService : MachineCommands, IMachineService
             case "batch":
                 return _batchStatusModel;
 
-            case "queue":
+            case "inventory":
+                return _inventoryStatusModel;
 
 
             default:
@@ -154,19 +172,20 @@ public class BeerMachineService : MachineCommands, IMachineService
                 if (command.Parameters == null)
                     throw new Exception("batch command parameters cannot be null");
 
-                _batchQueue.Enqueue( new BatchDTO () {
+                _batchQueue.Enqueue(new BatchDTO()
+                {
                     Id = command.Parameters["id"],
                     Amount = command.Parameters["amount"],
                     Speed = command.Parameters["speed"],
                     Type = command.Parameters["type"],
                     UserId = command.Parameters["user"]
-                } );
+                });
                 break;
 
             case "start":
                 BatchDTO batch = _batchQueue.Dequeue();
                 StartBatch(_opcClient, batch);
-                _iBatchHandler.SaveBatchAsync ( batch );
+                _iBatchHandler.SaveBatchAsync(batch);
                 break;
 
             case "reset":
