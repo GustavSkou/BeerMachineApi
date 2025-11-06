@@ -4,6 +4,7 @@ using Opc.UaFx.Client;
 using BeerMachineApi.Services.DTOs;
 using BeerMachineApi.Services.StatusModels;
 using BeerMachineApi.Repository;
+using System.Threading.Tasks;
 
 namespace BeerMachineApi.Services;
 
@@ -76,7 +77,7 @@ public class BeerMachineService : MachineCommands, IMachineService
         }
     }
 
-    private void HandleProcessedChange(object sender, OpcDataChangeReceivedEventArgs e)
+    private async void HandleProcessedChange(object sender, OpcDataChangeReceivedEventArgs e)
     {
         // The 'sender' variable contains the OpcMonitoredItem with the NodeId
         OpcMonitoredItem item = (OpcMonitoredItem)sender;
@@ -87,12 +88,7 @@ public class BeerMachineService : MachineCommands, IMachineService
         if (_batchStatusModel.BatchId == null || _batchStatusModel.BatchId == 0)
             return;
 
-        _iTimeHandler.SaveTimeAsync(new TimeDTO(
-            (int)_batchStatusModel.BatchId,
-            _machineStatusModel.Temperature,
-            _machineStatusModel.Humidity,
-            _machineStatusModel.Vibration
-        ));
+
 
         _iBatchHandler.SaveBatchChangesAsync(new BatchDTO()
         {
@@ -100,6 +96,13 @@ public class BeerMachineService : MachineCommands, IMachineService
             ProducedAmount = _batchStatusModel.ProducedAmount,
             DefectiveAmount = _batchStatusModel.DefectiveAmount,
         });
+
+        _iTimeHandler.SaveTimeAsync(new TimeDTO(
+            (int)_batchStatusModel.BatchId,
+            _machineStatusModel.Temperature,
+            _machineStatusModel.Humidity,
+            _machineStatusModel.Vibration
+        ));
 
         if (_batchStatusModel.IsBatchDone())
         {
@@ -130,7 +133,7 @@ public class BeerMachineService : MachineCommands, IMachineService
     /// <summary>
     /// The machine is stop and reset, if the queue is not empty the next batch will be started
     /// </summary>
-    private void HandleBatchProcess()
+    private async void HandleBatchProcess()
     {
         Thread.Sleep(500);
         StopMachine(_opcClient);
@@ -158,13 +161,12 @@ public class BeerMachineService : MachineCommands, IMachineService
             case "inventory":
                 return _inventoryStatusModel;
 
-
             default:
                 throw new Exception("status time does not exist");
         }
     }
 
-    public void ExecuteCommand(Command command)
+    public async void ExecuteCommand(Command command)
     {
         if (_opcClient == null) throw new Exception("OpcClient error");
 
@@ -191,7 +193,7 @@ public class BeerMachineService : MachineCommands, IMachineService
                 break;
 
             case "reset":
-                ResetMachine(_opcClient);
+                ResetMachine(_opcClient); //make sure that if there is a batch running that it is save
                 break;
 
             case "stop":

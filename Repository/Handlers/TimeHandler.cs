@@ -3,7 +3,7 @@ using BeerMachineApi.Services.DTOs;
 
 public class TimeHandler : EntityHandler, ITimeHandler
 {
-    public TimeHandler ( IServiceScopeFactory scopeFactory ) : base ( scopeFactory ) { }
+    public TimeHandler(IServiceScopeFactory scopeFactory) : base(scopeFactory) { }
 
     public async void SaveTimeAsync(TimeDTO time)
     {
@@ -14,7 +14,7 @@ public class TimeHandler : EntityHandler, ITimeHandler
 
         var timeEntity = new Time
         {
-            BatchId = (int)time.Id,
+            BatchId = (int)time.BatchId,
             Temperature = time.Temperature,
             Humidity = time.Humidity,
             Vibration = time.Vibration,

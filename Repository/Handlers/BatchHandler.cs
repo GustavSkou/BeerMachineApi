@@ -1,9 +1,10 @@
 using BeerMachineApi.Repository;
 using BeerMachineApi.Services.DTOs;
+using Microsoft.EntityFrameworkCore;
 
 public class BatchHandler : EntityHandler, IBatchHandler
 {
-    public BatchHandler( IServiceScopeFactory scopeFactory ) : base ( scopeFactory ) { }
+    public BatchHandler(IServiceScopeFactory scopeFactory) : base(scopeFactory) { }
 
     public async void SaveBatchAsync(BatchDTO batch)
     {
@@ -24,27 +25,26 @@ public class BatchHandler : EntityHandler, IBatchHandler
             UpdatedAt = nowUnspecified
         };
         await db.Batches.AddAsync(entity);
-        db.SaveChanges();
+        await db.SaveChangesAsync();
     }
 
-    public async void SaveBatchChangesAsync(BatchDTO batch)
+    public async void SaveBatchChangesAsync(BatchDTO batchDTO)
     {
         using var scope = _scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<MachineDbContext>();
 
-        var existing = db.Batches.FirstOrDefault(b => b.Id == (int)batch.Id);
-        if (existing == null) return;
+        // Use the async EF method to avoid blocking threads
+        var batch = await db.Batches.FirstOrDefaultAsync(b => b.Id == (int)batchDTO.Id);
+        if (batch == null) return;
 
         var nowUnspecified = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified);
 
-        existing.Failed = batch.DefectiveAmount;
-        existing.AmountCompleted = batch.ProducedAmount;
-        existing.AmountCompleted = batch.DefectiveAmount;
-        existing.Failed = batch.DefectiveAmount;
-        existing.UpdatedAt = nowUnspecified;
+        batch.AmountCompleted = batchDTO.ProducedAmount;
+        batch.Failed = batchDTO.DefectiveAmount;
+        batch.UpdatedAt = nowUnspecified;
 
-        if (batch.Amount == batch.ProducedAmount)
-            existing.CompletedAt = nowUnspecified;
+        if (batch.Amount == batchDTO.ProducedAmount)
+            batch.CompletedAt = nowUnspecified;
 
         await db.SaveChangesAsync();
     }

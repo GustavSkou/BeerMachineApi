@@ -1,4 +1,5 @@
 namespace BeerMachineApi.Repository;
+
 using BeerMachineApi.Services.DTOs;
 
 public interface IBatchHandler

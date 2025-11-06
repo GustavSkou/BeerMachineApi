@@ -9,9 +9,8 @@ public class InventoryStatusModel
     public int Yeast { get; set; }
     public bool FillingInventory { get; set; }
 
-    public InventoryStatusModel(Opc.UaFx.Client.OpcClient session)
+    public InventoryStatusModel()
     {
-        UpdateModel(session);
         Barley = 0;
         Hops = 0;
         Malt = 0;
