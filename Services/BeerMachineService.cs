@@ -106,7 +106,7 @@ public class BeerMachineService : MachineCommands, IMachineService
 
         if (_batchStatusModel.IsBatchDone())
         {
-            // save when batch is done will mark it as completed in db
+            // save when batch is done, it will be marked  as completed in db
             _iBatchHandler.SaveBatchChangesAsync(new BatchDTO()
             {
                 Id = (float)_batchStatusModel.BatchId,
@@ -174,7 +174,7 @@ public class BeerMachineService : MachineCommands, IMachineService
         {
             case "batch":
                 if (command.Parameters == null)
-                    throw new Exception("batch command parameters cannot be null");
+                    throw new BadHttpRequestException("when create a batch parameter cannot be null");
 
                 _batchQueue.Enqueue(new BatchDTO()
                 {
@@ -187,9 +187,16 @@ public class BeerMachineService : MachineCommands, IMachineService
                 break;
 
             case "start":
-                BatchDTO batch = _batchQueue.Dequeue();
-                StartBatch(_opcClient, batch);
-                _iBatchHandler.SaveBatchAsync(batch);
+                if (_batchQueue.Count > 0)
+                {
+                    BatchDTO batch = _batchQueue.Dequeue();
+                    StartBatch(_opcClient, batch);
+                    _iBatchHandler.SaveBatchAsync(batch);
+                }
+                else
+                {
+                    throw new BadHttpRequestException("no queued batches");
+                }
                 break;
 
             case "reset":
