@@ -48,11 +48,15 @@ public class MachineController : ControllerBase
             _logger.LogError("Post request with no Type");
             return BadRequest("Command type cannot be null or empty");
         }
-
         try
         {
             _machineHandler.ExecuteCommand(command);
             return Ok($"Executed: {command.Type}");
+        }
+        catch (BadHttpRequestException ex)
+        {
+            _logger.LogError(ex, "Error executing command");
+            return BadRequest(ex.Message);
         }
         catch (Exception ex)
         {
