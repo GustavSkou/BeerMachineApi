@@ -31,13 +31,13 @@ public class BatchStatusModel
     {
         BatchId = Convert.ToSingle(session.ReadNode(NodeIds.StatusBatchId).Value);
         Speed = Convert.ToSingle(session.ReadNode(NodeIds.StatusMachSpeed).Value);
-
+        BeerType = Convert.ToSingle(session.ReadNode(NodeIds.AdminCurType).Value);
         ToProduceAmount = Convert.ToSingle(session.ReadNode(NodeIds.StatusCurAmount).Value);
         ProducedAmount = Convert.ToInt32(session.ReadNode(NodeIds.AdminProcessedCount).Value);
         DefectiveAmount = Convert.ToInt32(session.ReadNode(NodeIds.AdminDefectiveCount).Value);
     }
 
-    public bool IsBatchDone ()
+    public bool IsBatchDone()
     {
         return ToProduceAmount == ProducedAmount;
     }

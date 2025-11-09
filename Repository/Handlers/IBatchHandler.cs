@@ -6,4 +6,5 @@ public interface IBatchHandler
 {
     public void SaveBatchAsync(BatchDTO batch);
     public void SaveBatchChangesAsync(BatchDTO batch);
+    public Task<long> GetNextId();
 }

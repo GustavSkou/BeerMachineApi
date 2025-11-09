@@ -48,4 +48,12 @@ public class BatchHandler : EntityHandler, IBatchHandler
 
         await db.SaveChangesAsync();
     }
+    
+    public async Task<long> GetNextId()
+    {
+        using var scope = _scopeFactory.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MachineDbContext>();
+        var nextId = (await db.Batches.MaxAsync(b => b.Id)) + 1;
+        return nextId;
+    }
 }

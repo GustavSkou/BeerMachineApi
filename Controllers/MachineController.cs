@@ -32,6 +32,14 @@ public class MachineController : ControllerBase
         ];
     }
 
+    [HttpGet("/status/inventory")]
+    public IEnumerable<object> GetStatusinventory()
+    {
+        return [
+            _machineHandler.GetStatus("inventory")
+        ];
+    }
+
     [HttpGet("/status/queue")]
     public IEnumerable<object> GetStatusQueue()
     {
