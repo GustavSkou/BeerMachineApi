@@ -192,6 +192,10 @@ public class BeerMachineService : MachineCommands, IMachineService
                 DisconnectFromServer(_opcClient);
                 break;
 
+            case "abort":
+                AbortMachine(_opcClient);
+                break;
+
             case "pause":
 
                 break;

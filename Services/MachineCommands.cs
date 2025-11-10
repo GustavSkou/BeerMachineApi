@@ -37,6 +37,15 @@ public class MachineCommands
         opcSession.WriteNodes(commands);
     }
 
+    protected void AbortMachine(OpcClient opcSession)
+    {
+        OpcWriteNode[] commands = {
+                new(NodeIds.CntrlCmd, 4),
+                new(NodeIds.CmdChangeRequest, true)
+            };
+        opcSession.WriteNodes(commands);
+    }
+
     protected void ConnectToServer(OpcClient opcSession)
     {
         opcSession.Connect();
