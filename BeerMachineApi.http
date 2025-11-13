@@ -12,6 +12,8 @@ Accept: application/json
 GET {{BeerMachineApi_HostAddress}}/status/inventory
 Accept: application/json
 
+GET {{BeerMachineApi_HostAddress}}/status/queue
+Accept: application/json
 
 POST {{BeerMachineApi_HostAddress}}/machine/command HTTP/1.1
 Content-Type: application/json

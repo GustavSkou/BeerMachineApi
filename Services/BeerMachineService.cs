@@ -81,7 +81,6 @@ public class BeerMachineService : MachineCommands, IMachineService
             Console.Clear();
             try
             {
-
                 ConnectToServer(_opcClient);
             }
             catch (Exception ex)
@@ -135,8 +134,10 @@ public class BeerMachineService : MachineCommands, IMachineService
             case "inventory":
                 return _inventoryStatusModel;
 
+            case "queue":
+                return _batchQueue.ToArray();
             default:
-                throw new Exception("status time does not exist");
+                throw new Exception("status does not exist");
         }
     }
 

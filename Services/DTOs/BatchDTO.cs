@@ -7,7 +7,7 @@ namespace BeerMachineApi.Services.DTOs;
 /// </summary>
 public class BatchDTO
 {
-    public float Id { get; set; }
+    public float? Id { get; set; }
     public float Amount { get; set; }
     public float Speed { get; set; }
     public float Type { get; set; }
