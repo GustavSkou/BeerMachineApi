@@ -5,7 +5,6 @@ using BeerMachineApi.Services.DTOs;
 using BeerMachineApi.Services.StatusModels;
 using BeerMachineApi.Repository;
 using System.Collections.Concurrent;
-using System.Threading.Tasks;
 
 namespace BeerMachineApi.Services;
 
@@ -158,7 +157,6 @@ public class BeerMachineService : MachineCommands, IMachineService
 
                 _batchQueue.Enqueue(new BatchDTO()
                 {
-                    //Id = command.Parameters["id"],
                     Amount = command.Parameters["amount"],
                     Speed = command.Parameters["speed"],
                     Type = command.Parameters["type"],
@@ -228,7 +226,8 @@ public class BeerMachineService : MachineCommands, IMachineService
             (int)_batchStatusModel.BatchId,
             _machineStatusModel.Temperature,
             _machineStatusModel.Humidity,
-            _machineStatusModel.Vibration
+            _machineStatusModel.Vibration,
+            _machineStatusModel.Speed
         ));
 
         if (_batchStatusModel.IsBatchDone())

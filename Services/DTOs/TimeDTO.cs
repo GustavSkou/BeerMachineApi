@@ -11,12 +11,14 @@ public class TimeDTO
     public double Humidity { get; set; }
 
     public double Vibration { get; set; }
+    public double Speed { get; set; }
 
-    public TimeDTO(int batchId, float temperature, float humidity, float vibration)
+    public TimeDTO(int batchId, float temperature, float humidity, float vibration, float speed)
     {
         BatchId = batchId;
         Temperature = temperature;
         Humidity = humidity;
         Vibration = vibration;
+        Speed = Speed;
     }
 }

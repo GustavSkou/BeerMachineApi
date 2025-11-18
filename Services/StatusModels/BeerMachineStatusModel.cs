@@ -18,13 +18,12 @@ public class BeerMachineStatusModel
     public float Temperature { get; set; }
     public float Vibration { get; set; }
     public float Humidity { get; set; }
-
     public int StopReason { get; set; }
 
     public void UpdateModel(Opc.UaFx.Client.OpcClient session)
     {
         Ctrlcmd = (int)session.ReadNode(NodeIds.CntrlCmd).Value;
-        Speed = (float)session.ReadNode(NodeIds.StatusMachSpeed).Value;
+        Speed = (float)session.ReadNode(NodeIds.StatusCurMachSpeed).Value;
         Temperature = (float)session.ReadNode(NodeIds.StatusTemp).Value;
         Vibration = (float)session.ReadNode(NodeIds.StatusMovement).Value;
         Humidity = (float)session.ReadNode(NodeIds.StatusHumidity).Value;
