@@ -12,9 +12,12 @@ public class TimeDTO
 
     public double Vibration { get; set; }
 
-    public TimeDTO(int batchId, float temperature, float humidity, float vibration)
+    public float Speed { get; set; }
+
+    public TimeDTO(int batchId, float speed, float temperature, float humidity, float vibration)
     {
         BatchId = batchId;
+        Speed = speed;
         Temperature = temperature;
         Humidity = humidity;
         Vibration = vibration;

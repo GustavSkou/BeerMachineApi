@@ -15,6 +15,8 @@ public partial class Time
 
     public double Vibration { get; set; }
 
+    public double Speed { get; set; }
+
     public DateTime TimeStamp { get; set; }
 
     public DateTime? CreatedAt { get; set; }

@@ -13,6 +13,8 @@ public partial class Batch
 
     public int Amount { get; set; }
 
+    public int Speed { get; set; }
+
     public int Failed { get; set; }
 
     public int AmountCompleted { get; set; }

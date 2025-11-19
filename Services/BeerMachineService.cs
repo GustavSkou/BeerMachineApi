@@ -226,6 +226,7 @@ public class BeerMachineService : MachineCommands, IMachineService
 
         _iTimeHandler.SaveTimeAsync(new TimeDTO(
             (int)_batchStatusModel.BatchId,
+            _machineStatusModel.Speed,
             _machineStatusModel.Temperature,
             _machineStatusModel.Humidity,
             _machineStatusModel.Vibration

@@ -6,11 +6,8 @@ namespace BeerMachineApi.Repository;
 
 public partial class MachineDbContext : DbContext
 {
-    public MachineDbContext()
-    {
-    }
-
-    public MachineDbContext(DbContextOptions<MachineDbContext> options) : base(options)
+    public MachineDbContext(DbContextOptions<MachineDbContext> options)
+        : base(options)
     {
     }
 
@@ -38,9 +35,6 @@ public partial class MachineDbContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
-    /*protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseNpgsql($"Host=localhost:5433;Database=beer_app;Username=postgres;Password={DB_PASSWORD}");
-    */
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Batch>(entity =>
@@ -63,6 +57,7 @@ public partial class MachineDbContext : DbContext
             entity.Property(e => e.Failed)
                 .HasDefaultValue(0)
                 .HasColumnName("failed");
+            entity.Property(e => e.Speed).HasColumnName("speed");
             entity.Property(e => e.StartedAt)
                 .HasColumnType("timestamp(0) without time zone")
                 .HasColumnName("started_at");
@@ -236,6 +231,7 @@ public partial class MachineDbContext : DbContext
                 .HasColumnType("timestamp(0) without time zone")
                 .HasColumnName("created_at");
             entity.Property(e => e.Humidity).HasColumnName("humidity");
+            entity.Property(e => e.Speed).HasColumnName("speed");
             entity.Property(e => e.Temperature).HasColumnName("temperature");
             entity.Property(e => e.TimeStamp)
                 .HasColumnType("timestamp(0) without time zone")
@@ -260,12 +256,14 @@ public partial class MachineDbContext : DbContext
             entity.Property(e => e.CreatedAt)
                 .HasColumnType("timestamp(0) without time zone")
                 .HasColumnName("created_at");
+            entity.Property(e => e.LowerSpeedLimit).HasColumnName("lower_speed_limit");
             entity.Property(e => e.Name)
                 .HasMaxLength(255)
                 .HasColumnName("name");
             entity.Property(e => e.UpdatedAt)
                 .HasColumnType("timestamp(0) without time zone")
                 .HasColumnName("updated_at");
+            entity.Property(e => e.UpperSpeedLimit).HasColumnName("upper_speed_limit");
         });
 
         modelBuilder.Entity<User>(entity =>
