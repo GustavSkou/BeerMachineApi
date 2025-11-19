@@ -17,27 +17,22 @@ public class MachineController : ControllerBase
     }
 
     [HttpGet("/status/machine")]
-    public IEnumerable<object> GetStatusMachine()
+    public ActionResult<object> GetStatusMachine()
     {
-        return [
-            _machineHandler.GetStatus("machine")
-        ];
+        return _machineHandler.GetStatus("machine");
     }
 
     [HttpGet("/status/batch")]
-    public IEnumerable<object> GetStatusBatch()
+    public ActionResult<object> GetStatusBatch()
     {
-        return [
-            _machineHandler.GetStatus("batch")
-        ];
+        return _machineHandler.GetStatus("batch");
+
     }
 
     [HttpGet("/status/inventory")]
-    public IEnumerable<object> GetStatusinventory()
+    public ActionResult<object> GetStatusinventory()
     {
-        return [
-            _machineHandler.GetStatus("inventory")
-        ];
+        return _machineHandler.GetStatus("inventory");
     }
 
     [HttpGet("/status/queue")]
