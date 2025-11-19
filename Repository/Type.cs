@@ -9,6 +9,10 @@ public partial class Type
 
     public string Name { get; set; } = null!;
 
+    public int LowerSpeedLimit { get; set; }
+
+    public int UpperSpeedLimit { get; set; }
+
     public DateTime? CreatedAt { get; set; }
 
     public DateTime? UpdatedAt { get; set; }

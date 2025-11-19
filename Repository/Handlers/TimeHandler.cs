@@ -18,6 +18,7 @@ public class TimeHandler : EntityHandler, ITimeHandler
             Temperature = time.Temperature,
             Humidity = time.Humidity,
             Vibration = time.Vibration,
+            Speed = time.Speed,
             TimeStamp = nowUnspecified,
             CreatedAt = nowUnspecified,
             UpdatedAt = nowUnspecified,
