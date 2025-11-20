@@ -36,11 +36,9 @@ public class MachineController : ControllerBase
     }
 
     [HttpGet("/status/queue")]
-    public IEnumerable<object> GetStatusQueue()
+    public ActionResult<object> GetStatusQueue()
     {
-        return [
-            _machineHandler.GetStatus("queue")
-        ];
+        return _machineHandler.GetStatus("queue");
     }
 
     [HttpPost("command")]

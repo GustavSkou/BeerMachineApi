@@ -5,26 +5,35 @@ GET {{BeerMachineApi_HostAddress}}/status/machine
 Accept: application/json
 
 
+
 GET {{BeerMachineApi_HostAddress}}/status/batch
 Accept: application/json
+
 
 
 GET {{BeerMachineApi_HostAddress}}/status/inventory
 Accept: application/json
 
+
+
 GET {{BeerMachineApi_HostAddress}}/status/queue
 Accept: application/json
+
+
 
 POST {{BeerMachineApi_HostAddress}}/machine/command HTTP/1.1
 Content-Type: application/json
 {
     "Type": "stop"
 }
+
+
 POST {{BeerMachineApi_HostAddress}}/machine/command HTTP/1.1
 Content-Type: application/json
 {
     "Type": "reset"
 }
+
 
 POST {{BeerMachineApi_HostAddress}}/machine/command HTTP/1.1
 Content-Type: application/json
