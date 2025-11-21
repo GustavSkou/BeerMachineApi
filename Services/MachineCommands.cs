@@ -17,6 +17,7 @@ public class MachineCommands
         };
 
         opcClient.WriteNodes(commands);
+        Console.WriteLine("start");
     }
 
     protected void ResetMachine(OpcClient opcSession)
@@ -26,6 +27,7 @@ public class MachineCommands
                 new(NodeIds.CmdChangeRequest, true)
             };
         opcSession.WriteNodes(commands);
+        Console.WriteLine("reset");
     }
 
     protected void StopMachine(OpcClient opcSession)
@@ -35,6 +37,7 @@ public class MachineCommands
                 new(NodeIds.CmdChangeRequest, true)
             };
         opcSession.WriteNodes(commands);
+        Console.WriteLine("stop");
     }
 
     protected void AbortMachine(OpcClient opcSession)
@@ -44,6 +47,7 @@ public class MachineCommands
                 new(NodeIds.CmdChangeRequest, true)
             };
         opcSession.WriteNodes(commands);
+        Console.WriteLine("abort");
     }
 
     protected void ConnectToServer(OpcClient opcSession)
