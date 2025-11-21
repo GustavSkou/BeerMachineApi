@@ -10,6 +10,7 @@ public class BeerMachineStatusModel
         Vibration = 0;
         Humidity = 0;
         StopReason = 0;
+        StateCurrent = 2;
     }
 
     public float Speed { get; set; }
@@ -20,6 +21,7 @@ public class BeerMachineStatusModel
     public float Humidity { get; set; }
 
     public int StopReason { get; set; }
+    public int StateCurrent { get; set; }
 
     public void UpdateModel(Opc.UaFx.Client.OpcClient session)
     {
@@ -29,6 +31,7 @@ public class BeerMachineStatusModel
         Vibration = (float)session.ReadNode(NodeIds.StatusMovement).Value;
         Humidity = (float)session.ReadNode(NodeIds.StatusHumidity).Value;
         StopReason = (int)session.ReadNode(NodeIds.AdminStopReason).Value;
+        StateCurrent = (int)session.ReadNode(NodeIds.StatusStateCurrent).Value;
     }
 
     public override string ToString()
