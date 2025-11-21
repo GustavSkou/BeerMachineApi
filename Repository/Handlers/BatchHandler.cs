@@ -33,8 +33,8 @@ public class BatchHandler : EntityHandler, IBatchHandler
         using var scope = _scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<MachineDbContext>();
 
-        // Use the async EF method to avoid blocking threads
         var batch = await db.Batches.FirstOrDefaultAsync(b => b.Id == (int)batchDTO.Id);
+        // if the batch is not found create it
         if (batch == null)
         {
             SaveBatchAsync(batchDTO);
