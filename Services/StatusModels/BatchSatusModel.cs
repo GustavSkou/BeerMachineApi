@@ -1,3 +1,5 @@
+using BeerMachineApi.Services.DTOs;
+
 namespace BeerMachineApi.Services.StatusModels;
 
 public class BatchStatusModel
@@ -55,5 +57,19 @@ public class BatchStatusModel
             values.Add($"{property.GetValue(this),space}");
         }
         return $"{string.Join("", names)}\n{string.Join("", values)}";
+    }
+
+    public BatchDTO GetDTO()
+    {
+        return new BatchDTO
+        {
+            Id = BatchId,
+            Amount = ToProduceAmount,
+            Speed = Speed,
+            Type = BeerType ?? 0,
+            UserId = UserId,
+            DefectiveAmount = DefectiveAmount,
+            ProducedAmount = ProducedAmount
+        };
     }
 }

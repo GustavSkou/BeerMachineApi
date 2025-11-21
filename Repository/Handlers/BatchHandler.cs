@@ -35,7 +35,11 @@ public class BatchHandler : EntityHandler, IBatchHandler
 
         // Use the async EF method to avoid blocking threads
         var batch = await db.Batches.FirstOrDefaultAsync(b => b.Id == (int)batchDTO.Id);
-        if (batch == null) return;
+        if (batch == null)
+        {
+            SaveBatchAsync(batchDTO);
+
+        }
 
         var nowUnspecified = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified);
 
@@ -48,7 +52,7 @@ public class BatchHandler : EntityHandler, IBatchHandler
 
         await db.SaveChangesAsync();
     }
-    
+
     public async Task<long> GetNextId()
     {
         using var scope = _scopeFactory.CreateScope();

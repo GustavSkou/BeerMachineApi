@@ -217,12 +217,7 @@ public class BeerMachineService : MachineCommands, IMachineService
         if (_batchStatusModel.BatchId == null || _batchStatusModel.BatchId == 0)
             return;
 
-        _iBatchHandler.SaveBatchChangesAsync(new BatchDTO()
-        {
-            Id = (float)_batchStatusModel.BatchId,
-            ProducedAmount = _batchStatusModel.ProducedAmount,
-            DefectiveAmount = _batchStatusModel.DefectiveAmount,
-        });
+        _iBatchHandler.SaveBatchChangesAsync(_batchStatusModel.GetDTO());
 
         _iTimeHandler.SaveTimeAsync(new TimeDTO(
             (int)_batchStatusModel.BatchId,
@@ -235,14 +230,8 @@ public class BeerMachineService : MachineCommands, IMachineService
         if (_batchStatusModel.IsBatchDone())
         {
             // save when batch is done, it will be marked  as completed in db
-            _iBatchHandler.SaveBatchChangesAsync(new BatchDTO()
-            {
-                Id = (float)_batchStatusModel.BatchId,
-                Amount = _batchStatusModel.ToProduceAmount,
-                ProducedAmount = _batchStatusModel.ProducedAmount,
-                DefectiveAmount = _batchStatusModel.DefectiveAmount,
-            });
-            HandleBatchProcess(); // Remove await since HandleBatchProcess is void
+            _iBatchHandler.SaveBatchChangesAsync(_batchStatusModel.GetDTO());
+            HandleBatchProcess();
         }
         Console.Clear();
         Console.WriteLine($"Data Change {item.NodeId}: {e.Item.Value}\n{_machineStatusModel}\n{_batchStatusModel}");
