@@ -30,14 +30,19 @@ public class ServiceTests
     [Test]
     public void ConnectToMachine ()
     {
+        bool connected = false;
+
         Thread machineThread = new Thread(_machineService.Start);
         machineThread.Start ();
 
         Thread.Sleep ( 100 );
 
+        if ( _machineService.OpcClient == null )
+            Assert.Fail ( "OpcClient is null" );
+
         _machineService.OpcClient.Connected += ( sender, e ) =>
         {
-            Assert.Pass ();
+            connected = true;
         };
 
         Thread connectToServerThread = new Thread(_machineService.TryToConnectToServer);
@@ -46,7 +51,9 @@ public class ServiceTests
         // Try to connect a couple times
         for ( int i = 0; i < 4; i++ )
         {
-            Thread.Sleep ( 1000 );
+            if ( connected )
+                Assert.Pass ();
+            Thread.Sleep ( 500 );
         }
         Assert.Fail ( "Connecting failed 5 times in a row, is simulation running?" );      
     }
