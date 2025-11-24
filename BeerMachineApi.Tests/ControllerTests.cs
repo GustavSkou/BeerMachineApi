@@ -7,7 +7,7 @@ using BeerMachineApi.Services;
 
 namespace BeerMachineApi.Tests.Controllers;
 
-public class Tests
+public class ControllerTests
 {
     private Mock<IMachineService> _mockMachineService;
     private Mock<ILogger<MachineController>> _mockLogger;
@@ -21,6 +21,8 @@ public class Tests
         _controller = new MachineController ( _mockMachineService.Object, _mockLogger.Object );
     }
 
+    [Category ( "Controller" )]
+    [Category ( "Get Request" )]
     [Test]
     public void GetMachineStatus()
     {
@@ -41,6 +43,8 @@ public class Tests
         ValidateStatusResult ( actionResult, expectedStatus );
     }
 
+    [Category ( "Controller" )]
+    [Category ( "Get Request" )]
     [Test]
     public void GetBatchStatus ()
     {
@@ -61,7 +65,9 @@ public class Tests
 
         ValidateStatusResult ( actionResult, expectedStatus );
     }
-
+    
+    [Category ( "Controller" )]
+    [Category ( "Get Request" )]
     [Test]
     public void GetInventoryStatus ()
     {
@@ -104,7 +110,9 @@ public class Tests
         }
         Assert.Pass ();
     }
-
+    
+    [Category ( "Controller" )]
+    [Category ( "Post Request" )]
     [Test]
     public void StartBatchSequence ()
     {
