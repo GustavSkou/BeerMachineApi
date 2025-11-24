@@ -51,7 +51,7 @@ public class MachineController : ControllerBase
         }
         try
         {
-            _machineHandler.ExecuteCommand(command);
+            _machineHandler.QueueCommand(command);
             return Ok($"Executed: {command.Type}");
         }
         catch (BadHttpRequestException ex)

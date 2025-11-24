@@ -1,22 +1,36 @@
-using Opc.UaFx;
 using Opc.UaFx.Client;
+using System.Collections.Concurrent;
 
 using BeerMachineApi.Services.DTOs;
 using BeerMachineApi.Services.StatusModels;
 using BeerMachineApi.Repository;
-using System.Collections.Concurrent;
-using System.Threading.Tasks;
 
 namespace BeerMachineApi.Services;
 
 public class BeerMachineService : MachineCommands, IMachineService
 {
+    public bool IsConnected
+    {
+        get { return _isConnected; }
+    }
+
+    public ConcurrentQueue<Command> CommandQueue
+    {
+        get { return _commandQueue; }
+    }
+
+    public OpcClient? OpcClient
+    {
+        get { return _opcClient; }
+    }
+
+    private bool _isConnected = false;
     private BeerMachineStatusModel _machineStatusModel;
     private BatchStatusModel _batchStatusModel;
     private InventoryStatusModel _inventoryStatusModel;
     private OpcClient? _opcClient;
     private readonly string _serverURL;
-    private readonly ConcurrentQueue<Command> _machineCommandQueue;
+    private readonly ConcurrentQueue<Command> _commandQueue;
     private readonly Queue<BatchDTO> _batchQueue;
     private readonly IBatchHandler _iBatchHandler;
     private readonly ITimeHandler _iTimeHandler;
@@ -38,23 +52,9 @@ public class BeerMachineService : MachineCommands, IMachineService
         _iBatchHandler = iBatchHandler;
 
         _batchQueue = new Queue<BatchDTO>();
-        _machineCommandQueue = new ConcurrentQueue<Command>();
+        _commandQueue = new ConcurrentQueue<Command>();
 
-        Thread commandQueueThread = new Thread(() =>
-        {
-            while (true)
-            {
-                if (_machineCommandQueue.TryDequeue(out Command? command))
-                {
-                    ProcessCommand(command);
-                    Thread.Sleep(500);  // wait to ensure that command has been process by the machine
-                }
-                else
-                {
-                    Thread.Sleep(100);
-                }
-            }
-        });
+        Thread commandQueueThread = new Thread( RunCommandQueueProcessor );
         commandQueueThread.IsBackground = true;
         commandQueueThread.Start();
 
@@ -74,29 +74,33 @@ public class BeerMachineService : MachineCommands, IMachineService
     {
         using (_opcClient = new OpcClient(_serverURL))
         {
-            _opcClient.Connecting += (sender, e) => { Console.WriteLine("Connecting to BeerMachine"); };
-            // When the opcClient is connected to the machine
+            // Setup events
+            _opcClient.Connecting += ( sender, e ) => { Console.WriteLine ( "Connecting to BeerMachine" ); };
             _opcClient.Connected += (sender, e) => OnConnected();
-
-            Console.Clear();
-            try
-            {
-                ConnectToServer(_opcClient);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Connection to machine failed, retrying...");
-                Thread.Sleep(1000);
-                Start();
-            }
-
+            _opcClient.Disconnected += ( sender, e ) => OnDisconnected ();
+            
             while (true) { } // keep connection alive. Todo True should be replace by some cancellation token
+        }
+    }
+
+    public void TryToConnectToServer ()
+    {
+        try
+        {
+            ConnectToServer ( _opcClient );
+        }
+        catch ( Exception ex )
+        {
+            Console.WriteLine ( "Connection to machine failed, retrying..." );
+            Thread.Sleep ( 1000 );
+            TryToConnectToServer ();
         }
     }
 
     private void OnConnected()
     {
         Console.WriteLine("Connected to BeerMachine");
+        _isConnected = true;
 
         OpcSubscribeDataChange[] subscriptions = GetSubscriptions();
         _opcClient.SubscribeNodes(subscriptions);
@@ -106,18 +110,23 @@ public class BeerMachineService : MachineCommands, IMachineService
         _batchStatusModel.UpdateModel(_opcClient);
     }
 
+    private void OnDisconnected ()
+    {
+        _isConnected = false;
+    }
+
     /// <summary>
     /// The machine is stop and reset, if the queue is not empty the next batch will be started
     /// </summary>
     private void HandleBatchProcess()
     {
-        ExecuteCommand(new Command { Type = "stop" });
-        ExecuteCommand(new Command { Type = "reset" });
+        QueueCommand(new Command { Type = "stop" });
+        QueueCommand(new Command { Type = "reset" });
 
         // If there is more batches in the queue, the next should be started
         if (_batchQueue.Count > 0)
         {
-            _machineCommandQueue.Enqueue(new Command() { Type = "start" }); // start the next batch
+            _commandQueue.Enqueue(new Command() { Type = "start" }); // start the next batch
         }
     }
 
@@ -141,9 +150,9 @@ public class BeerMachineService : MachineCommands, IMachineService
         }
     }
 
-    public void ExecuteCommand(Command command)
+    public void QueueCommand(Command command)
     {
-        _machineCommandQueue.Enqueue(command);
+        _commandQueue.Enqueue(command);
     }
 
     private async Task ProcessCommand(Command command)
@@ -257,5 +266,22 @@ public class BeerMachineService : MachineCommands, IMachineService
             new OpcSubscribeDataChange(NodeIds.Wheat, HandleInventoryChange),
             new OpcSubscribeDataChange(NodeIds.Hops, HandleInventoryChange)
         };
+    }
+
+    private void RunCommandQueueProcessor ()
+    {
+        // Go step by step though each command and send it to the machine
+        while ( true )
+        {
+            if ( _commandQueue.TryDequeue ( out Command? command ) )
+            {
+                ProcessCommand ( command );
+                Thread.Sleep ( 500 );  // wait to ensure that command has been process by the machine
+            }
+            else
+            {
+                Thread.Sleep ( 100 );
+            }
+        }
     }
 }

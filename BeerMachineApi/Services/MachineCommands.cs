@@ -50,12 +50,12 @@ public class MachineCommands
         Console.WriteLine("abort");
     }
 
-    protected void ConnectToServer(OpcClient opcSession)
+    public void ConnectToServer(OpcClient opcSession)
     {
         opcSession.Connect();
     }
 
-    protected void DisconnectFromServer(OpcClient opcSession)
+    public void DisconnectFromServer(OpcClient opcSession)
     {
         opcSession.Disconnect();
         opcSession.Dispose(); //Clean up in case it wasn't automatically handled

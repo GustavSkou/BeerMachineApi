@@ -20,10 +20,14 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-// resolve and start as before
+// start beermachine service
 var machineService = app.Services.GetRequiredService<IMachineService>();
-Thread thread = new Thread(machineService.Start);
-thread.Start();
+Thread machineServiceThread = new Thread(machineService.Start);
+machineServiceThread.Start();
+
+Thread thread = new Thread(machineService.TryToConnectToServer);
+thread.Start ();
+
 
 if (app.Environment.IsDevelopment())
 {

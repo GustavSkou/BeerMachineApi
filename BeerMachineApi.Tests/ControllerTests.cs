@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
+
 using BeerMachineApi.Controllers;
 using BeerMachineApi.Services;
 
@@ -132,7 +133,7 @@ public class ControllerTests
             },
         ];
 
-        _mockMachineService.Setup ( s => s.ExecuteCommand ( It.IsAny<Command> () ) ).Verifiable ();
+        _mockMachineService.Setup ( s => s.QueueCommand ( It.IsAny<Command> () ) ).Verifiable ();
 
         foreach ( Command command in commands )
         {
