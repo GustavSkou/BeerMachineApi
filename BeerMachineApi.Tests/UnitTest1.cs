@@ -22,9 +22,92 @@ public class Tests
     }
 
     [Test]
+    public void GetMachineStatus()
+    {
+        Dictionary<string, object> expectedStatus = new Dictionary<string, object>()
+        {
+            {"speed", 0},
+            {"ctrlcmd", 0},
+            {"temperature", 0},
+            {"vibration", 0},
+            {"humidity", 0},
+            {"stopReason", 0},
+            {"stateCurrent", 2}
+        };
+
+        _mockMachineService.Setup ( s => s.GetStatus ( "machine" ) ).Returns ( expectedStatus );
+        var actionResult = _controller.GetStatusMachine ();
+
+        ValidateStatusResult ( actionResult, expectedStatus );
+    }
+
+    [Test]
+    public void GetBatchStatus ()
+    {
+        Dictionary<string, object> expectedStatus = new Dictionary<string, object>()
+        {
+            { "batchId", null },
+            { "beerType", null },
+            { "speed", 0 },
+            { "toProduceAmount", 0 },
+            { "producedAmount", 0 },
+            { "defectiveAmount", 0 },
+            { "userId", 0 },
+            { "failureRate", 0 }
+        };
+
+        _mockMachineService.Setup ( s => s.GetStatus ( "batch" ) ).Returns ( expectedStatus );
+        var actionResult = _controller.GetStatusBatch ();
+
+        ValidateStatusResult ( actionResult, expectedStatus );
+    }
+
+    [Test]
+    public void GetInventoryStatus ()
+    {
+        Dictionary<string, object> expectedStatus = new Dictionary<string, object>()
+        {
+            { "barley", 0 },
+            { "hops", 0 },
+            { "malt", 0 },
+            { "wheat", 0 },
+            { "yeast", 0 },
+            { "fillingInventory", false }
+        };
+
+        _mockMachineService.Setup ( s => s.GetStatus ( "inventory" ) ).Returns ( expectedStatus );
+        var actionResult = _controller.GetStatusInventory ();
+
+        ValidateStatusResult ( actionResult, expectedStatus );
+    }
+
+    private void ValidateStatusResult ( ActionResult<object> actionResult, Dictionary<string, object> expectedStatus )
+    {
+        var value = actionResult.Value;
+        var status = value as Dictionary<string, object>;
+
+        if ( status is null )
+        {
+            Assert.Fail ( "Result is expetced to be type Dictionary<string, object>" );
+            return;
+        }
+
+        if ( status.Count != status.Count )
+        {
+            Assert.Fail ( "The status is a different size" );
+        }
+
+        foreach ( var key in status.Keys )
+        {
+            if ( !expectedStatus.ContainsKey ( key ) )
+                Assert.Fail ();
+        }
+        Assert.Pass ();
+    }
+
+    [Test]
     public void StartBatchSequence ()
     {
-        // Arrange
         Command[] commands =
         [
             new Command () { Type = "stop" },
@@ -41,10 +124,8 @@ public class Tests
             },
         ];
 
-        // Setup mock to not throw exceptions for valid commands
         _mockMachineService.Setup ( s => s.ExecuteCommand ( It.IsAny<Command> () ) ).Verifiable ();
 
-        // Act & Assert
         foreach ( Command command in commands )
         {
             var result = _controller.PostCommand(command);

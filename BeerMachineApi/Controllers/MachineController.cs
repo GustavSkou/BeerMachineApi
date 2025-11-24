@@ -30,7 +30,7 @@ public class MachineController : ControllerBase
     }
 
     [HttpGet("/status/inventory")]
-    public ActionResult<object> GetStatusinventory()
+    public ActionResult<object> GetStatusInventory()
     {
         return _machineHandler.GetStatus("inventory");
     }
