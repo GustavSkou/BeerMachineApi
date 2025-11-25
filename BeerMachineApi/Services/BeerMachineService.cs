@@ -54,7 +54,7 @@ public class BeerMachineService : MachineCommands, IMachineService
         _batchQueue = new Queue<BatchDTO>();
         _commandQueue = new ConcurrentQueue<Command>();
 
-        Thread commandQueueThread = new Thread( RunCommandQueueProcessor );
+        Thread commandQueueThread = new Thread(RunCommandQueueProcessor);
         commandQueueThread.IsBackground = true;
         commandQueueThread.Start();
 
@@ -75,25 +75,25 @@ public class BeerMachineService : MachineCommands, IMachineService
         using (_opcClient = new OpcClient(_serverURL))
         {
             // Setup events
-            _opcClient.Connecting += ( sender, e ) => { Console.WriteLine ( "Connecting to BeerMachine" ); };
+            _opcClient.Connecting += (sender, e) => { Console.WriteLine("Connecting to BeerMachine"); };
             _opcClient.Connected += (sender, e) => OnConnected();
-            _opcClient.Disconnected += ( sender, e ) => OnDisconnected ();
-            
+            _opcClient.Disconnected += (sender, e) => OnDisconnected();
+
             while (true) { } // keep connection alive. Todo True should be replace by some cancellation token
         }
     }
 
-    public void TryToConnectToServer ()
+    public void TryToConnectToServer()
     {
         try
         {
-            ConnectToServer ( _opcClient );
+            ConnectToServer(_opcClient);
         }
-        catch ( Exception ex )
+        catch (Exception ex)
         {
-            Console.WriteLine ( "Connection to machine failed, retrying..." );
-            Thread.Sleep ( 1000 );
-            TryToConnectToServer ();
+            Console.WriteLine("Connection to machine failed, retrying...");
+            Thread.Sleep(1000);
+            TryToConnectToServer();
         }
     }
 
@@ -110,7 +110,7 @@ public class BeerMachineService : MachineCommands, IMachineService
         _batchStatusModel.UpdateModel(_opcClient);
     }
 
-    private void OnDisconnected ()
+    private void OnDisconnected()
     {
         _isConnected = false;
     }
@@ -163,15 +163,24 @@ public class BeerMachineService : MachineCommands, IMachineService
         {
             case "batch":
                 if (command.Parameters == null)
-                    throw new BadHttpRequestException("when create a batch parameter cannot be null");
+                {
+                    throw new BadHttpRequestException("when creating a batch, parameter cannot be null");
+                }
+
+                if (!command.Parameters.TryGetValue("amount", out int amount) ||
+                    !command.Parameters.TryGetValue("speed", out int speed) ||
+                    !command.Parameters.TryGetValue("type", out int type) ||
+                    !command.Parameters.TryGetValue("user", out int user))
+                {
+                    throw new BadHttpRequestException("Parameter missing");
+                }
 
                 _batchQueue.Enqueue(new BatchDTO()
                 {
-                    //Id = command.Parameters["id"],
-                    Amount = command.Parameters["amount"],
-                    Speed = command.Parameters["speed"],
-                    Type = command.Parameters["type"],
-                    UserId = command.Parameters["user"]
+                    Amount = amount,
+                    Speed = speed,
+                    Type = type,
+                    UserId = user
                 });
                 Console.WriteLine("batch queued");
                 break;
@@ -268,19 +277,19 @@ public class BeerMachineService : MachineCommands, IMachineService
         };
     }
 
-    private void RunCommandQueueProcessor ()
+    private void RunCommandQueueProcessor()
     {
         // Go step by step though each command and send it to the machine
-        while ( true )
+        while (true)
         {
-            if ( _commandQueue.TryDequeue ( out Command? command ) )
+            if (_commandQueue.TryDequeue(out Command? command))
             {
-                ProcessCommand ( command );
-                Thread.Sleep ( 500 );  // wait to ensure that command has been process by the machine
+                ProcessCommand(command);
+                Thread.Sleep(500);  // wait to ensure that command has been process by the machine
             }
             else
             {
-                Thread.Sleep ( 100 );
+                Thread.Sleep(100);
             }
         }
     }

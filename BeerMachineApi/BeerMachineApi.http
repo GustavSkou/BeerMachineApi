@@ -42,7 +42,6 @@ Content-Type: application/json
 {
     "Type": "batch",
     "Parameters": {
-        "id": 1,
         "amount": 50,
         "speed": 100,
         "type": 1,

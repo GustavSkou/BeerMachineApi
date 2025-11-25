@@ -15,15 +15,15 @@ public class ControllerTests
     private MachineController _controller;
 
     [SetUp]
-    public void Setup ()
+    public void Setup()
     {
-        _mockMachineService = new Mock<IMachineService> ();
-        _mockLogger = new Mock<ILogger<MachineController>> ();
-        _controller = new MachineController ( _mockMachineService.Object, _mockLogger.Object );
+        _mockMachineService = new Mock<IMachineService>();
+        _mockLogger = new Mock<ILogger<MachineController>>();
+        _controller = new MachineController(_mockMachineService.Object, _mockLogger.Object);
     }
 
-    [Category ( "Controller" )]
-    [Category ( "Get Request" )]
+    [Category("Controller")]
+    [Category("Get Request")]
     [Test]
     public void GetMachineStatus()
     {
@@ -38,16 +38,16 @@ public class ControllerTests
             {"stateCurrent", 2}
         };
 
-        _mockMachineService.Setup ( s => s.GetStatus ( "machine" ) ).Returns ( expectedStatus );
-        var actionResult = _controller.GetStatusMachine ();
+        _mockMachineService.Setup(s => s.GetStatus("machine")).Returns(expectedStatus);
+        var actionResult = _controller.GetStatusMachine();
 
-        ValidateStatusResult ( actionResult, expectedStatus );
+        ValidateStatusResult(actionResult, expectedStatus);
     }
 
-    [Category ( "Controller" )]
-    [Category ( "Get Request" )]
+    [Category("Controller")]
+    [Category("Get Request")]
     [Test]
-    public void GetBatchStatus ()
+    public void GetBatchStatus()
     {
         Dictionary<string, object> expectedStatus = new Dictionary<string, object>()
         {
@@ -61,16 +61,16 @@ public class ControllerTests
             { "failureRate", 0 }
         };
 
-        _mockMachineService.Setup ( s => s.GetStatus ( "batch" ) ).Returns ( expectedStatus );
-        var actionResult = _controller.GetStatusBatch ();
+        _mockMachineService.Setup(s => s.GetStatus("batch")).Returns(expectedStatus);
+        var actionResult = _controller.GetStatusBatch();
 
-        ValidateStatusResult ( actionResult, expectedStatus );
+        ValidateStatusResult(actionResult, expectedStatus);
     }
-    
-    [Category ( "Controller" )]
-    [Category ( "Get Request" )]
+
+    [Category("Controller")]
+    [Category("Get Request")]
     [Test]
-    public void GetInventoryStatus ()
+    public void GetInventoryStatus()
     {
         Dictionary<string, object> expectedStatus = new Dictionary<string, object>()
         {
@@ -82,40 +82,40 @@ public class ControllerTests
             { "fillingInventory", false }
         };
 
-        _mockMachineService.Setup ( s => s.GetStatus ( "inventory" ) ).Returns ( expectedStatus );
-        var actionResult = _controller.GetStatusInventory ();
+        _mockMachineService.Setup(s => s.GetStatus("inventory")).Returns(expectedStatus);
+        var actionResult = _controller.GetStatusInventory();
 
-        ValidateStatusResult ( actionResult, expectedStatus );
+        ValidateStatusResult(actionResult, expectedStatus);
     }
 
-    private void ValidateStatusResult ( ActionResult<object> actionResult, Dictionary<string, object> expectedStatus )
+    private void ValidateStatusResult(ActionResult<object> actionResult, Dictionary<string, object> expectedStatus)
     {
         var value = actionResult.Value;
         var status = value as Dictionary<string, object>;
 
-        if ( status is null )
+        if (status is null)
         {
-            Assert.Fail ( "Result is expetced to be type Dictionary<string, object>" );
+            Assert.Fail("Result is expetced to be type Dictionary<string, object>");
             return;
         }
 
-        if ( status.Count != status.Count )
+        if (status.Count != status.Count)
         {
-            Assert.Fail ( "The status is a different size" );
+            Assert.Fail("The status is a different size");
         }
 
-        foreach ( var key in status.Keys )
+        foreach (var key in status.Keys)
         {
-            if ( !expectedStatus.ContainsKey ( key ) )
-                Assert.Fail ();
+            if (!expectedStatus.ContainsKey(key))
+                Assert.Fail();
         }
-        Assert.Pass ();
+        Assert.Pass();
     }
-    
-    [Category ( "Controller" )]
-    [Category ( "Post Request" )]
+
+    [Category("Controller")]
+    [Category("Post Request")]
     [Test]
-    public void StartBatchSequence ()
+    public void StartBatchSequence()
     {
         Command[] commands =
         [
@@ -133,21 +133,21 @@ public class ControllerTests
             },
         ];
 
-        _mockMachineService.Setup ( s => s.QueueCommand ( It.IsAny<Command> () ) ).Verifiable ();
+        _mockMachineService.Setup(s => s.QueueCommand(It.IsAny<Command>())).Verifiable();
 
-        foreach ( Command command in commands )
+        foreach (Command command in commands)
         {
             var result = _controller.PostCommand(command);
 
-            if ( result is not OkObjectResult )
-                Assert.Fail ( $"Command {command.Type} should succeed" );
+            if (result is not OkObjectResult)
+                Assert.Fail($"Command {command.Type} should succeed");
 
             var okResult = result as OkObjectResult;
 
-            if ( okResult?.Value?.ToString () != $"Executed: {command.Type}" )
-                Assert.Fail ( "wrong message" );
+            if (okResult?.Value?.ToString() != $"Executed: {command.Type}")
+                Assert.Fail("wrong message");
 
         }
-        Assert.Pass ();
+        Assert.Pass();
     }
 }
