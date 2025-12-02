@@ -188,7 +188,9 @@ public class BeerMachineService : MachineCommands, IMachineService
             case "start":
                 if (_batchQueue.Count > 0)
                 {
+
                     BatchDTO batch = _batchQueue.Dequeue();
+                    _batchStatusModel.UserId = batch.UserId;
                     batch.Id = (float)await _iBatchHandler.GetNextId(); // get the id from the db
                     StartBatch(_opcClient, batch);
                     _iBatchHandler.SaveBatchAsync(batch);
