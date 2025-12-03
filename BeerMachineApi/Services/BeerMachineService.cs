@@ -108,6 +108,8 @@ public class BeerMachineService : MachineCommands, IMachineService
         OpcSubscribeDataChange[] subscriptions = GetSubscriptions();
         _opcClient.SubscribeNodes(subscriptions);
 
+        Console.Write(_opcClient);
+
         // update models OnConnected
         _inventoryStatusModel.UpdateModel(_opcClient);
         _machineStatusModel.UpdateModel(_opcClient);
