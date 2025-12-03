@@ -28,6 +28,7 @@ public class BeerMachineService : MachineCommands, IMachineService
     private BeerMachineStatusModel _machineStatusModel;
     private BatchStatusModel _batchStatusModel;
     private InventoryStatusModel _inventoryStatusModel;
+    private MaintenanceStatusModel _maintenanceStatusModel;
     private OpcClient? _opcClient;
     private readonly string _serverURL;
     private readonly ConcurrentQueue<Command> _commandQueue;
@@ -39,6 +40,7 @@ public class BeerMachineService : MachineCommands, IMachineService
         BeerMachineStatusModel beerMachineStatusModel,
         BatchStatusModel batchStatusModel,
         InventoryStatusModel inventoryStatusModel,
+        MaintenanceStatusModel maintenanceStatusModel,
         IBatchHandler iBatchHandler,
         ITimeHandler iTimehandler,
         bool simulated = true
@@ -47,6 +49,7 @@ public class BeerMachineService : MachineCommands, IMachineService
         _machineStatusModel = beerMachineStatusModel;
         _batchStatusModel = batchStatusModel;
         _inventoryStatusModel = inventoryStatusModel;
+        _maintenanceStatusModel = maintenanceStatusModel;
 
         _iTimeHandler = iTimehandler;
         _iBatchHandler = iBatchHandler;
@@ -105,9 +108,11 @@ public class BeerMachineService : MachineCommands, IMachineService
         OpcSubscribeDataChange[] subscriptions = GetSubscriptions();
         _opcClient.SubscribeNodes(subscriptions);
 
+        // update models OnConnected
         _inventoryStatusModel.UpdateModel(_opcClient);
         _machineStatusModel.UpdateModel(_opcClient);
         _batchStatusModel.UpdateModel(_opcClient);
+        _maintenanceStatusModel.UpdateModel(_opcClient);
     }
 
     private void OnDisconnected()
@@ -142,6 +147,9 @@ public class BeerMachineService : MachineCommands, IMachineService
 
             case "inventory":
                 return _inventoryStatusModel;
+
+            case "maintenance":
+                return _maintenanceStatusModel;
 
             case "queue":
                 return _batchQueue.ToArray();
@@ -264,18 +272,19 @@ public class BeerMachineService : MachineCommands, IMachineService
 
     private void HandleMaintenanceChange(object sender, OpcDataChangeReceivedEventArgs e)
     {
-
+        _maintenanceStatusModel.UpdateModel(_opcClient);
     }
 
     private OpcSubscribeDataChange[] GetSubscriptions()
     {
         return new OpcSubscribeDataChange[] {
-            new OpcSubscribeDataChange(NodeIds.AdminProcessedCount, HandleProcessedChange),
-            new OpcSubscribeDataChange(NodeIds.Barley, HandleInventoryChange),
+            new OpcSubscribeDataChange(NodeIds.AdminProcessedCount, HandleProcessedChange), // on batch completed amount change
+            new OpcSubscribeDataChange(NodeIds.Barley, HandleInventoryChange),              // inventory change
             new OpcSubscribeDataChange(NodeIds.Malt, HandleInventoryChange),
             new OpcSubscribeDataChange(NodeIds.Yeast, HandleInventoryChange),
             new OpcSubscribeDataChange(NodeIds.Wheat, HandleInventoryChange),
-            new OpcSubscribeDataChange(NodeIds.Hops, HandleInventoryChange)
+            new OpcSubscribeDataChange(NodeIds.Hops, HandleInventoryChange),
+            new OpcSubscribeDataChange(NodeIds.MaintenanceCount, HandleMaintenanceChange)   // maintenance change
         };
     }
 

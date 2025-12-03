@@ -41,6 +41,12 @@ public class MachineController : ControllerBase
         return _machineHandler.GetStatus("queue");
     }
 
+    [HttpGet("/status/maintenance")]
+    public ActionResult<object> GetStatusMaintenance()
+    {
+        return _machineHandler.GetStatus("maintenance");
+    }
+
     [HttpPost("command")]
     public IActionResult PostCommand([FromBody] Command command)
     {

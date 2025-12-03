@@ -21,6 +21,11 @@ Accept: application/json
 
 ###
 
+GET {{BeerMachineApi_HostAddress}}/status/maintenance
+Accept: application/json
+
+###
+
 POST {{BeerMachineApi_HostAddress}}/machine/command HTTP/1.1
 Content-Type: application/json
 {
@@ -42,7 +47,7 @@ Content-Type: application/json
 {
     "Type": "batch",
     "Parameters": {
-        "amount": 50,
+        "amount": 1000,
         "speed": 100,
         "type": 1,
         "user": 1

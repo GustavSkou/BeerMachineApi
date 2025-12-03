@@ -11,6 +11,7 @@ builder.Services.AddSingleton<IMachineService, BeerMachineService>();
 builder.Services.AddTransient<BeerMachineStatusModel>();
 builder.Services.AddTransient<BatchStatusModel>();
 builder.Services.AddTransient<InventoryStatusModel>();
+builder.Services.AddTransient<MaintenanceStatusModel>();
 
 builder.Services.AddTransient<IBatchHandler, BatchHandler>();
 builder.Services.AddTransient<ITimeHandler, TimeHandler>();
@@ -26,7 +27,7 @@ Thread machineServiceThread = new Thread(machineService.Start);
 machineServiceThread.Start();
 
 Thread thread = new Thread(machineService.TryToConnectToServer);
-thread.Start ();
+thread.Start();
 
 
 if (app.Environment.IsDevelopment())
