@@ -9,11 +9,6 @@ namespace BeerMachineApi.Services;
 
 public class BeerMachineService : MachineCommands, IMachineService
 {
-    public bool IsConnected
-    {
-        get { return _isConnected; }
-    }
-
     public ConcurrentQueue<Command> CommandQueue
     {
         get { return _commandQueue; }
