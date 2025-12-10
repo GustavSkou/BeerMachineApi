@@ -1,6 +1,6 @@
 namespace BeerMachineApi.Services.StatusModels;
 
-public class InventoryStatusModel
+public class InventoryStatusModel : IStatusModel
 {
     public int Barley { get; set; }
     public int Hops { get; set; }

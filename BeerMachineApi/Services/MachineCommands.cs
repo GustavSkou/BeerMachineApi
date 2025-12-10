@@ -1,11 +1,9 @@
 using Opc.UaFx;
 using Opc.UaFx.Client;
 using BeerMachineApi.Services.DTOs;
-using BeerMachineApi.Repository;
-using BeerMachineApi.Services.StatusModels;
 namespace BeerMachineApi.Services;
 
-public class MachineCommands
+public abstract class MachineCommands
 {
     protected void StartBatch(OpcClient opcClient, BatchDTO batch)
     {

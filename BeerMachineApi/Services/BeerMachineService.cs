@@ -19,7 +19,6 @@ public class BeerMachineService : MachineCommands, IMachineService
         get { return _opcClient; }
     }
 
-    private bool _isConnected = false;
     private BeerMachineStatusModel _machineStatusModel;
     private BatchStatusModel _batchStatusModel;
     private InventoryStatusModel _inventoryStatusModel;
@@ -98,7 +97,6 @@ public class BeerMachineService : MachineCommands, IMachineService
     private void OnConnected()
     {
         Console.WriteLine("Connected to BeerMachine");
-        _isConnected = true;
 
         OpcSubscribeDataChange[] subscriptions = GetSubscriptions();
         _opcClient.SubscribeNodes(subscriptions);
@@ -114,7 +112,7 @@ public class BeerMachineService : MachineCommands, IMachineService
 
     private void OnDisconnected()
     {
-        _isConnected = false;
+        
     }
 
     /// <summary>
@@ -254,7 +252,7 @@ public class BeerMachineService : MachineCommands, IMachineService
 
         if (_batchStatusModel.IsBatchDone())
         {
-            // save when batch is done, it will be marked  as completed in db
+            // save when batch is done, it will be marked as completed in db
             _iBatchHandler.SaveBatchChangesAsync(_batchStatusModel.GetDTO());
             HandleBatchProcess();
         }

@@ -2,7 +2,7 @@ using BeerMachineApi.Services.DTOs;
 
 namespace BeerMachineApi.Services.StatusModels;
 
-public class BatchStatusModel
+public class BatchStatusModel : IStatusModel
 {
     public float? BatchId { get; set; }
     public float? BeerType { get; set; }

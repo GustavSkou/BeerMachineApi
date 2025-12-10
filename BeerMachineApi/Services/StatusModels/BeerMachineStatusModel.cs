@@ -1,6 +1,6 @@
 namespace BeerMachineApi.Services.StatusModels;
 
-public class BeerMachineStatusModel
+public class BeerMachineStatusModel : IStatusModel
 {
     public BeerMachineStatusModel()
     {
