@@ -112,7 +112,7 @@ public class BeerMachineService : MachineCommands, IMachineService
 
     private void OnDisconnected()
     {
-        
+
     }
 
     /// <summary>
@@ -148,6 +148,7 @@ public class BeerMachineService : MachineCommands, IMachineService
 
             case "queue":
                 return _batchQueue.ToArray();
+
             default:
                 throw new Exception("status does not exist");
         }
@@ -218,6 +219,10 @@ public class BeerMachineService : MachineCommands, IMachineService
 
             case "abort":
                 AbortMachine(_opcClient);
+                break;
+
+            case "clear":
+                ClearMachine(_opcClient);
                 break;
 
             case "pause":

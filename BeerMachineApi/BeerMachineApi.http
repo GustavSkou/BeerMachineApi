@@ -45,6 +45,14 @@ Content-Type: application/json
 POST {{BeerMachineApi_HostAddress}}/machine/command HTTP/1.1
 Content-Type: application/json
 {
+    "Type": "clear"
+}
+
+###
+
+POST {{BeerMachineApi_HostAddress}}/machine/command HTTP/1.1
+Content-Type: application/json
+{
     "Type": "batch",
     "Parameters": {
         "amount": 1000,

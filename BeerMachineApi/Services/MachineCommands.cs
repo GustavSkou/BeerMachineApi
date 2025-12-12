@@ -69,4 +69,14 @@ public abstract class MachineCommands
         };
         opcSession.WriteNodes(commands);
     }
+
+    protected void ClearMachine(OpcClient opcSession)
+    {
+        OpcWriteNode[] commands = {
+                new(NodeIds.CntrlCmd, 5),
+                new(NodeIds.CmdChangeRequest, true)
+            };
+        opcSession.WriteNodes(commands);
+        Console.WriteLine("clear");
+    }
 }
